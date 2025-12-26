@@ -12,6 +12,7 @@ react-dom==18.2.0
 react-router-dom==6.20.1
 
 # Development Dependencies
+@tailwindcss/postcss==4.1.18
 @vitejs/plugin-react==4.2.1
 autoprefixer==10.4.23
 eslint==9.39.2
