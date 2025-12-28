@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        lexend: ['Lexend', 'sans-serif'],
+      },
       colors: {
         main: {
           DEFAULT: '#054d6c', // Dark blue - main color
