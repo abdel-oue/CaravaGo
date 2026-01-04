@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
 import UserService from '../models/User.js';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '../.env' });
 
 export const protect = async (req, res, next) => {
   let token;

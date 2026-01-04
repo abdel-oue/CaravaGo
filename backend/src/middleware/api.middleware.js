@@ -1,10 +1,9 @@
-// Middleware to validate API key for POST requests
-export const validateApiKey = (req, res, next) => {
-  // Only check API key for POST requests
-  if (req.method !== 'POST') {
-    return next();
-  }
+import dotenv from 'dotenv';
 
+dotenv.config({ path: '../.env' });
+
+// Middleware to validate API key for all requests
+export const validateApiKey = (req, res, next) => {
   const apiKey = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
 
   // Check if API key is provided
@@ -16,10 +15,10 @@ export const validateApiKey = (req, res, next) => {
   }
 
   // Check if API key matches the CaravaGo API key
-  const caravaGoApiKey = process.env.CARAVAGO_API_KEY;
+  const caravaGoApiKey = process.env.CARAVAGO_API;
 
   if (!caravaGoApiKey) {
-    console.error('CARAVAGO_API_KEY environment variable is not set');
+    console.error('CARAVAGO_API environment variable is not set');
     return res.status(500).json({
       message: 'Server configuration error',
       error: 'SERVER_CONFIG_ERROR'

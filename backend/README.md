@@ -60,7 +60,7 @@ npm run dev
 npm start
 ```
 
-The server will start on the port specified in your `.env` file (default: 5000).
+The server will start on the port specified in your `.env` file (default: 4000).
 
 ## API Endpoints
 
@@ -123,6 +123,7 @@ x-api-key: your_api_key_here
 ```bash
 GET /api/auth/me
 Authorization: Bearer jwt_token_here
+x-api-key: your_caravago_api_key_here
 ```
 
 **Response:**
@@ -183,7 +184,7 @@ Common HTTP status codes:
 
 ## API Key Authentication
 
-All POST requests require the CaravaGo API key to be included in the request headers:
+All requests require the CaravaGo API key to be included in the request headers:
 
 ```javascript
 headers: {
@@ -191,7 +192,7 @@ headers: {
 }
 ```
 
-The API key must match the value specified in the `CARAVAGO_API_KEY` environment variable.
+The API key must match the value specified in the `CARAVAGO_API` environment variable.
 
 ## Contributing
 

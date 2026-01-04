@@ -14,13 +14,19 @@ SUPABASE_ANON_KEY=your_supabase_anon_key_here
 JWT_SECRET=your_jwt_secret_key_here
 
 ### API Key Configuration
-CARAVAGO_API_KEY=caravago_api_key_here
+CARAVAGO_API=caravago_api_key_here
+
+### Server Configuration
+PORT=4000
 
 # Backend API URL
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:4000/api
 
 # API Key for backend authentication (must match CARAVAGO_API_KEY in backend)
 VITE_API_KEY=caravago_api_key_here
+
+# Frontend server port (optional, defaults to 3000)
+FRONTEND_PORT=3000
 
 # CaravaGo API needs to be available to make every post/get request (Contact Abdelaziz for the API)
 CARAVAGO_API=api_key_here

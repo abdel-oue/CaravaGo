@@ -9,8 +9,10 @@ import { validateApiKey } from '../middleware/api.middleware.js';
 
 const router = express.Router();
 
-router.post('/register', validateApiKey, register);
-router.post('/login', validateApiKey, login);
+router.use(validateApiKey); // Apply API key validation to all routes in this router
+
+router.post('/register', register);
+router.post('/login', login);
 router.get('/me', protect, getMe);
 
 export default router;
