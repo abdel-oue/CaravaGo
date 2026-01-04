@@ -2,6 +2,11 @@
 
 This document explains all environment variables required for the CaravaGo application.
 
+## Important Notes
+- All environment variables in the frontend **must be prefixed with `VITE_`** to be accessible in the browser
+- Create a `.env` file in the frontend root directory
+- Restart the development server after changing environment variables
+
 ## Backend Environment Variables (.env)
 
 Create a `.env` file in the backend root directory with the following variables:
@@ -22,11 +27,9 @@ PORT=4000
 # Backend API URL
 VITE_API_URL=http://localhost:4000/api
 
-# API Key for backend authentication (must match CARAVAGO_API_KEY in backend)
-VITE_API_KEY=caravago_api_key_here
-
 # Frontend server port (optional, defaults to 3000)
 FRONTEND_PORT=3000
 
-# CaravaGo API needs to be available to make every post/get request (Contact Abdelaziz for the API)
-CARAVAGO_API=api_key_here
+# Note: API keys are handled server-side only via proxy
+# Frontend communicates with backend via JWT authentication
+# Backend proxies external API calls with CARAVAGO_API key

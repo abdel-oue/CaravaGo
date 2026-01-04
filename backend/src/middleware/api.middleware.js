@@ -3,8 +3,9 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '../.env' });
 
-// Middleware to validate API key for all requests
+// Middleware to validate API key for external API calls only
 export const validateApiKey = (req, res, next) => {
+
   const apiKey = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
   const endpoint = `${req.method} ${req.path}`;
   const clientIP = req.ip || req.connection.remoteAddress;

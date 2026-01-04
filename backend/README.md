@@ -64,13 +64,19 @@ The server will start on the port specified in your `.env` file (default: 4000).
 
 ## API Endpoints
 
-### Authentication Routes (`/api/auth`)
+### Authentication Routes (`/api/auth`) - JWT Protected
 
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|---------|
 | POST | `/register` | Register a new user | Public |
 | POST | `/login` | Authenticate user | Public |
-| GET | `/me` | Get current user info | Private |
+| GET | `/me` | Get current user info | Private (JWT) |
+
+### External API Routes (`/api/external`) - API Key Protected
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|---------|
+| GET | `/caravago-data` | External API data | Private (API Key) |
 
 ### Request/Response Examples
 
@@ -78,7 +84,6 @@ The server will start on the port specified in your `.env` file (default: 4000).
 ```bash
 POST /api/auth/register
 Content-Type: application/json
-x-api-key: your_api_key_here
 
 {
   "name": "John Doe",
@@ -101,7 +106,6 @@ x-api-key: your_api_key_here
 ```bash
 POST /api/auth/login
 Content-Type: application/json
-x-api-key: your_api_key_here
 
 {
   "email": "john@example.com",
@@ -123,7 +127,6 @@ x-api-key: your_api_key_here
 ```bash
 GET /api/auth/me
 Authorization: Bearer jwt_token_here
-x-api-key: your_caravago_api_key_here
 ```
 
 **Response:**
@@ -182,17 +185,30 @@ Common HTTP status codes:
 - CORS enabled for frontend communication
 - Row Level Security (RLS) enabled in Supabase
 
-## API Key Authentication
+## Security Architecture
 
-All requests require the CaravaGo API key to be included in the request headers:
-
-```javascript
-headers: {
-  'x-api-key': 'your_caravago_api_key_here'
-}
+### Proxy-Based Security Model
+```
+Frontend ──JWT──▶ Backend ──API Key──▶ CaravaGo API
 ```
 
-The API key must match the value specified in the `CARAVAGO_API` environment variable.
+### Frontend Authentication (JWT-based)
+Frontend authentication routes (`/api/auth/*`) use **JWT tokens** for security:
+- **No API key required** for signup, login, and user data retrieval
+- **JWT tokens** are issued upon successful authentication
+- **Bearer token** authentication for protected routes
+
+### External API Proxy (API Key-based)
+External API calls are proxied through the backend with **CaravaGo API key**:
+- **API key stored server-side only** (never exposed to frontend)
+- **Secure proxy requests** to external CaravaGo API
+- **Backend validates and forwards** all external API calls
+
+### Request Flow
+1. **Frontend** → Makes request to `/api/external/*`
+2. **Backend** → Validates request (JWT for auth, API key for external)
+3. **Backend** → Makes secure call to CaravaGo API with `CARAVAGO_API` key
+4. **Backend** → Returns sanitized response to frontend
 
 ## Contributing
 

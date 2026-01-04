@@ -22,11 +22,15 @@
 - TypeScript-like JSDoc comments for complex functions
 
 ## Security Rules
-- All POST/GET requests require CARAVAGO_API key
+- **Proxy Architecture**: Frontend → Backend → External APIs
+- **Frontend authentication** uses JWT tokens (no API keys exposed to client)
+- **External API calls** require CARAVAGO_API key (server-side only via proxy)
+- **API keys are never exposed** to frontend/client-side code
 - Passwords must be hashed with bcrypt
 - JWT tokens for authenticated requests
 - Input sanitization and validation
-- CORS properly configured
+- CORS properly configured for frontend access
+- HTTPS required for production
 - No sensitive data in logs
 
 ## API Rules
