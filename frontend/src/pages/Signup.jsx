@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import backgroundImage from '../public/test1.jpg';
+import backgroundImage from '../public/auth-background.jpg';
 
 const Signup = () => {
   const [formData, setFormData] = useState({

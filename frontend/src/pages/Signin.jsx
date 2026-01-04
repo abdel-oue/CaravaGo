@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import backgroundImage from '../public/test1.jpg';
+import authBackground from '../public/auth-background.jpg';
 
 const Signin = () => {
   const [formData, setFormData] = useState({
@@ -55,8 +55,20 @@ const Signin = () => {
         />
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+      style={{
+        backgroundImage: `url(${authBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/50"></div>
 
       <div className={`relative z-10 max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+      <div className={`max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-500 relative z-10 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="text-center">
           <Link to="/" className="inline-block mb-4">
             <span className="text-3xl font-bold text-main">CaravaGo</span>
