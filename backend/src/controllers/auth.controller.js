@@ -1,5 +1,6 @@
 import UserService from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import { authLogger } from '../utils/logger.js';
 
 import dotenv from 'dotenv';
 
@@ -16,31 +17,43 @@ const generateToken = (id) => {
 // @access  Public
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name: userName, email, password } = req.body;
+
+    authLogger.info('Registration attempt started', { email, userName });
 
     // Validation
-    if (!name || !email || !password) {
+    if (!userName || !email || !password) {
+      authLogger.warning('Registration validation failed: missing required fields', { userName: !!userName, email: !!email, password: !!password });
       return res.status(400).json({ message: 'Please add all fields' });
     }
 
     if (password.length < 6) {
+      authLogger.warning('Registration validation failed: password too short', { passwordLength: password.length });
       return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
 
     // Check if user exists
     const userExists = await UserService.findByEmail(email);
     if (userExists) {
+      authLogger.warning('Registration failed: user already exists', { email, existingUserId: userExists.id });
       return res.status(400).json({ message: 'User already exists' });
     }
 
     // Create user
+    authLogger.info('Creating new user account', { email, userName });
     const user = await UserService.createUser({
-      name,
+      name: userName,
       email,
       password,
     });
 
     if (user) {
+      authLogger.success('User registration successful', {
+        userId: user.id,
+        email: user.email,
+        userName: user.name
+      });
+
       res.status(201).json({
         id: user.id,
         name: user.name,
@@ -48,11 +61,12 @@ export const register = async (req, res) => {
         token: generateToken(user.id),
       });
     } else {
+      authLogger.error('User creation failed: invalid user data returned', { email, userName });
       res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: error.message || 'Server error' });
+    authLogger.error('Registration process failed with exception', { email, userName }, error);
+    res.status(500).json({ message: 'Server error occurred during registration' });
   }
 };
 
@@ -63,22 +77,35 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    authLogger.info('Login attempt started', { email });
+
     // Validation
     if (!email || !password) {
+      authLogger.warning('Login validation failed: missing credentials', { hasEmail: !!email, hasPassword: !!password });
       return res.status(400).json({ message: 'Please add email and password' });
     }
 
     // Check for user email
     const user = await UserService.findByEmail(email);
     if (!user) {
+      authLogger.warning('Login failed: user not found', { email });
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    authLogger.info('User found, verifying password', { userId: user.id, email });
 
     // Check password
     const isMatch = await UserService.verifyPassword(password, user.password);
     if (!isMatch) {
+      authLogger.warning('Login failed: incorrect password', { userId: user.id, email });
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    authLogger.success('User login successful', {
+      userId: user.id,
+      email: user.email,
+      name: user.name
+    });
 
     res.json({
       id: user.id,
@@ -87,8 +114,8 @@ export const login = async (req, res) => {
       token: generateToken(user.id),
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: error.message || 'Server error' });
+    authLogger.error('Login process failed with exception', { email }, error);
+    res.status(500).json({ message: 'Server error occurred during login' });
   }
 };
 
@@ -97,10 +124,20 @@ export const login = async (req, res) => {
 // @access  Private
 export const getMe = async (req, res) => {
   try {
-    const user = await UserService.findById(req.user.id);
+    const userId = req.user.id;
+    authLogger.info('Fetching current user data', { userId });
+
+    const user = await UserService.findById(userId);
     if (!user) {
+      authLogger.warning('Current user not found', { userId });
       return res.status(404).json({ message: 'User not found' });
     }
+
+    authLogger.success('Current user data retrieved', {
+      userId: user.id,
+      email: user.email,
+      name: user.name
+    });
 
     res.json({
       id: user.id,
@@ -108,8 +145,8 @@ export const getMe = async (req, res) => {
       email: user.email,
     });
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ message: error.message || 'Server error' });
+    authLogger.error('Failed to retrieve current user data', { userId: req.user?.id }, error);
+    res.status(500).json({ message: 'Server error occurred while retrieving user data' });
   }
 };
 
