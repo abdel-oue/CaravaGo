@@ -78,6 +78,7 @@ The server will start on the port specified in your `.env` file (default: 5000).
 ```bash
 POST /api/auth/register
 Content-Type: application/json
+x-api-key: your_api_key_here
 
 {
   "name": "John Doe",
@@ -100,6 +101,7 @@ Content-Type: application/json
 ```bash
 POST /api/auth/login
 Content-Type: application/json
+x-api-key: your_api_key_here
 
 {
   "email": "john@example.com",
@@ -174,9 +176,22 @@ Common HTTP status codes:
 
 - Password hashing with bcrypt
 - JWT token-based authentication
+- API key authentication for POST requests
 - Input validation and sanitization
 - CORS enabled for frontend communication
 - Row Level Security (RLS) enabled in Supabase
+
+## API Key Authentication
+
+All POST requests require the CaravaGo API key to be included in the request headers:
+
+```javascript
+headers: {
+  'x-api-key': 'your_caravago_api_key_here'
+}
+```
+
+The API key must match the value specified in the `CARAVAGO_API_KEY` environment variable.
 
 ## Contributing
 
