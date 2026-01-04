@@ -1,4 +1,4 @@
-import User from '../models/User.js';
+import UserService from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
 // Generate JWT Token
@@ -20,14 +20,18 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: 'Please add all fields' });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
     // Check if user exists
-    const userExists = await User.findOne({ email });
+    const userExists = await UserService.findByEmail(email);
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
     // Create user
-    const user = await User.create({
+    const user = await UserService.createUser({
       name,
       email,
       password,
@@ -35,16 +39,17 @@ export const register = async (req, res) => {
 
     if (user) {
       res.status(201).json({
-        _id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
-        token: generateToken(user._id),
+        token: generateToken(user.id),
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Registration error:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };
 
@@ -61,25 +66,26 @@ export const login = async (req, res) => {
     }
 
     // Check for user email
-    const user = await User.findOne({ email }).select('+password');
+    const user = await UserService.findByEmail(email);
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Check password
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await UserService.verifyPassword(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     res.json({
-      _id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      token: generateToken(user.id),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };
 
@@ -88,14 +94,19 @@ export const login = async (req, res) => {
 // @access  Private
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await UserService.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     res.json({
-      _id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Get user error:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };
 

@@ -1,45 +1,90 @@
-import mongoose from 'mongoose';
+import { supabase } from '../config/db.js';
 import bcrypt from 'bcrypt';
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please add a name'],
-    trim: true,
-  },
-  email: {
-    type: String,
-    required: [true, 'Please add an email'],
-    unique: true,
-    lowercase: true,
-    trim: true,
-  },
-  password: {
-    type: String,
-    required: [true, 'Please add a password'],
-    minlength: 6,
-    select: false,
-  },
-}, {
-  timestamps: true,
-});
+class UserService {
+  // Create a new user
+  static async createUser(userData) {
+    try {
+      const { name, email, password } = userData;
 
-// Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next();
+      // Hash the password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // Insert user into Supabase
+      const { data, error } = await supabase
+        .from('users')
+        .insert([
+          {
+            name,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            created_at: new Date(),
+            updated_at: new Date()
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        // Handle unique constraint violation
+        if (error.code === '23505') {
+          throw new Error('User already exists with this email');
+        }
+        throw error;
+      }
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = data;
+      return userWithoutPassword;
+    } catch (error) {
+      throw error;
+    }
   }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
 
-// Compare password method
-userSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
+  // Find user by email
+  static async findByEmail(email) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
 
-const User = mongoose.model('User', userSchema);
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
 
-export default User;
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Find user by ID
+  static async findById(id) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, name, email, created_at, updated_at')
+        .eq('id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Verify password
+  static async verifyPassword(plainPassword, hashedPassword) {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  }
+}
+
+export default UserService;
 
