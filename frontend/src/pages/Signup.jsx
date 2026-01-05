@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import backgroundImage from '../public/test1.jpg';
+import { logger } from '../utils/logger';
+import backgroundImage from '../public/auth-background.jpg';
+import logo from '../public/logo-cropped.png';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -34,14 +36,20 @@ const Signup = () => {
     e.preventDefault();
     setError('');
 
+    logger.info('Starting user registration process');
+
     // Validation
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      const errorMsg = 'Password must be at least 6 characters long';
+      logger.warning('Password validation failed', { passwordLength: formData.password.length });
+      setError(errorMsg);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      const errorMsg = 'Passwords do not match';
+      logger.warning('Password confirmation failed');
+      setError(errorMsg);
       return;
     }
 
@@ -49,13 +57,59 @@ const Signup = () => {
 
     try {
       const { confirmPassword, ...registerData } = formData;
+      logger.info('Sending registration request to server');
+
       const response = await api.post('/auth/register', registerData);
+
+      logger.success('Registration successful', {
+        userId: response.data.id,
+        email: response.data.email
+      });
+
       login(response.data);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      const errorMessage = getUserFriendlyError(err);
+      logger.error('Registration failed', {
+        error: err.response?.data || err.message,
+        status: err.response?.status
+      });
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Convert API errors to user-friendly messages
+  const getUserFriendlyError = (err) => {
+    const status = err.response?.status;
+    const apiMessage = err.response?.data?.message;
+
+    switch (status) {
+      case 400:
+        if (apiMessage?.includes('already exists')) {
+          return 'An account with this email already exists. Please try signing in instead.';
+        }
+        if (apiMessage?.includes('Password must be')) {
+          return 'Password must be at least 6 characters long.';
+        }
+        return 'Please check your information and try again.';
+
+      case 401:
+        if (apiMessage?.includes('API key')) {
+          return 'There was a connection issue. Please refresh the page and try again.';
+        }
+        return 'Authentication failed. Please try again.';
+
+      case 403:
+        return 'Access denied. Please try again later.';
+
+      case 500:
+        return 'Server error. Please try again in a few moments.';
+
+      default:
+        return 'Something went wrong. Please check your internet connection and try again.';
     }
   };
 
@@ -68,13 +122,13 @@ const Signup = () => {
           alt="Background" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 bg-main/40"></div>
       </div>
 
       <div className={`relative z-10 max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="text-center">
           <Link to="/" className="inline-block mb-4">
-            <span className="text-3xl font-bold text-main">CaravaGo</span>
+            <img src={logo} alt="CaravaGo" className="h-12 w-auto mx-auto" />
           </Link>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-2 animate-fade-in">
             Start your journey

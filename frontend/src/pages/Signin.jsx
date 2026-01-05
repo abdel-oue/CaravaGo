@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import backgroundImage from '../public/test1.jpg';
+import authBackground from '../public/auth-background.jpg';
+import logo from '../public/logo-cropped.png';
 
 const Signin = () => {
   const [formData, setFormData] = useState({
@@ -48,18 +49,18 @@ const Signin = () => {
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src={backgroundImage} 
-          alt="Background" 
+        <img
+          src={authBackground}
+          alt="Background"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 bg-main/40"></div>
       </div>
 
       <div className={`relative z-10 max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl transform transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="text-center">
           <Link to="/" className="inline-block mb-4">
-            <span className="text-3xl font-bold text-main">CaravaGo</span>
+            <img src={logo} alt="CaravaGo" className="h-12 w-auto mx-auto" />
           </Link>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-2 animate-fade-in">
             Welcome back!
@@ -115,9 +116,12 @@ const Signin = () => {
 
           <div className="flex items-center justify-between animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <div className="text-sm">
-              <button type="button" className="font-medium text-main hover:text-main-dark transition-colors">
+              <Link
+                to="/forgot-password"
+                className="font-medium text-main hover:text-main-dark transition-colors"
+              >
                 Forgot your password?
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -159,4 +163,3 @@ const Signin = () => {
 };
 
 export default Signin;
-

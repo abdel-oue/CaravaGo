@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import UserService from '../models/User.js';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '../.env' });
 
 export const protect = async (req, res, next) => {
   let token;
@@ -16,10 +19,15 @@ export const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Get user from the token
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await UserService.findById(decoded.id);
+
+      if (!req.user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
 
       next();
     } catch (error) {
+      console.error('Auth middleware error:', error);
       return res.status(401).json({ message: 'Not authorized' });
     }
   }
