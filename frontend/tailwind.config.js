@@ -11,28 +11,25 @@ export default {
       },
       colors: {
         main: {
-          DEFAULT: '#054d6c', // Dark blue - main color
-          dark: '#033a52',
-          light: '#0c6a93',
+          DEFAULT: '#005C7B', // Deep teal from Yescapa
+          dark: '#004A63',
+          light: '#007A9F',
         },
         primary: {
-          DEFAULT: '#d92465', // Pink/magenta - primary buttons
-          dark: '#b81d54',
-          light: '#e6397a',
+          DEFAULT: '#D92662', // Hot Pink
+          dark: '#B01E4E',
+          light: '#E8457D',
         },
         bgLight: {
-          DEFAULT: '#f1f5f9', // Light gray - background
+          DEFAULT: '#F7F9FA', // Very light blue-gray
         },
         secondary: {
-          DEFAULT: '#f1f5f9', // Light gray - secondary buttons
-          dark: '#e2e8f0',
+          DEFAULT: '#FFC400', // Yellow accent
         },
         onMain: {
-          DEFAULT: '#0c6a93', // Lighter blue - buttons on main background
-          dark: '#054d6c',
-          light: '#1a7ba8',
+          DEFAULT: '#007A9F',
+          dark: '#005C7B',
         },
-        
       },
     },
   },
