@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import heroImage from '../public/heroimagetest2.jpg';
+import heroImage from '../public/heroimgtesst.jpg';
 import logo from '../public/logo.png';
 
 const Home = () => {

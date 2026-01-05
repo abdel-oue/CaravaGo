@@ -32,6 +32,7 @@ export default {
           dark: '#054d6c',
           light: '#1a7ba8',
         },
+        
       },
     },
   },
