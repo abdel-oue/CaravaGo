@@ -16,13 +16,7 @@ const connectDB = async () => {
     dbLogger.info('Attempting to connect to MongoDB database');
 
     // Connect to MongoDB
-    await mongoose.connect(mongoUrl, {
-      // Modern Mongoose connection options
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferCommands: false, // Disable mongoose buffering
-      bufferMaxEntries: 0, // Disable mongoose buffering
-    });
+    await mongoose.connect(mongoUrl);
 
     dbLogger.success('Database connection established successfully');
   } catch (error) {
@@ -41,7 +35,7 @@ mongoose.connection.on('error', (err) => {
 });
 
 mongoose.connection.on('disconnected', () => {
-  dbLogger.warn('Mongoose disconnected from MongoDB');
+  dbLogger.warning('Mongoose disconnected from MongoDB');
 });
 
 // Graceful shutdown
