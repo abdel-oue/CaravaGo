@@ -1,5 +1,9 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import campervan from '../../public/campervan.png';
+import largeCampervan from '../../public/Largecampervan.png';
+import lowProfile from '../../public/Lowprofilemotorhome.png';
+import coachbuilt from '../../public/Coachbuiltmotorhome.png';
 
 const vehicleTypes = [
     {
@@ -8,7 +12,7 @@ const vehicleTypes = [
         description: 'The campervan is accessible and versatile. Ideal for outdoor enthusiasts and renters who want to feel closer to nature.',
         color: 'bg-pink-100', // Pastel Pink
         link: '#',
-        icon: '🚐'
+        image: campervan
     },
     {
         name: 'Large campervan',
@@ -16,7 +20,7 @@ const vehicleTypes = [
         description: 'Perfect for couples and short family road trips, the large campervan rhymes with practicality. Handy and compact, it will take you everywhere.',
         color: 'bg-blue-100', // Pastel Blue
         link: '#',
-        icon: '🚍'
+        image: largeCampervan
     },
     {
         name: 'Low profile motorhome',
@@ -24,7 +28,7 @@ const vehicleTypes = [
         description: 'The most compact vehicle of all with all the necessary equipment. A little bonus? Its aerodynamic shape is slightly better for your wallet and the planet.',
         color: 'bg-yellow-100', // Pastel Yellow
         link: '#',
-        icon: '🚐'
+        image: lowProfile
     },
     {
         name: 'Coachbuilt motorhome',
@@ -32,7 +36,7 @@ const vehicleTypes = [
         description: 'Great comfort for larger crews! A coachbuilt offers you a real taste of freedom while allowing you autonomy during your getaways. Kids will love it.',
         color: 'bg-pink-100', // Pastel Pink
         link: '#',
-        icon: '🚌'
+        image: coachbuilt
     },
 ];
 
@@ -64,9 +68,13 @@ const VehicleTypes = () => {
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
                         >
-                            {/* Image/Icon container with pastel blob */}
-                            <div className={`relative rounded-3xl ${vehicle.color} aspect-video mb-8 flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:-translate-y-2`}>
-                                <span className="text-8xl drop-shadow-xl">{vehicle.icon}</span>
+                            {/* Image container with pastel blob */}
+                            <div className={`relative rounded-3xl ${vehicle.color} aspect-[4/3] mb-8 flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:-translate-y-2 p-4`}>
+                                <img
+                                    src={vehicle.image}
+                                    alt={vehicle.name}
+                                    className="w-full h-full object-contain"
+                                />
                             </div>
 
                             <h3 className="text-xl font-bold text-gray-900 mb-1 font-lexend">{vehicle.name}</h3>
