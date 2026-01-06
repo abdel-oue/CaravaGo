@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import { logger } from '../utils/logger';
-import backgroundImage from '../public/auth-background.jpg';
-import logo from '../public/logo-cropped.png';
+import AuthLayout from './AuthLayout';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
+import Notification from '../components/ui/Notification';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +16,7 @@ const Signup = () => {
     password: '',
     confirmPassword: '',
   });
-  const [error, setError] = useState('');
+  const [notification, setNotification] = useState({ message: '', type: 'error', isVisible: false });
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -24,13 +26,14 @@ const Signup = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    // Clear error when user starts typing
-    if (error) setError('');
+    // Clear notification when user starts typing
+    setNotification({ message: '', type: 'error', isVisible: false });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    // Clear any existing notification
+    setNotification({ message: '', type: 'error', isVisible: false });
 
     logger.info('Starting user registration process');
 
@@ -38,14 +41,14 @@ const Signup = () => {
     if (formData.password.length < 6) {
       const errorMsg = 'Password must be at least 6 characters long';
       logger.warning('Password validation failed', { passwordLength: formData.password.length });
-      setError(errorMsg);
+      setNotification({ message: errorMsg, type: 'error', isVisible: true });
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       const errorMsg = 'Passwords do not match';
       logger.warning('Password confirmation failed');
-      setError(errorMsg);
+      setNotification({ message: errorMsg, type: 'error', isVisible: true });
       return;
     }
 
@@ -62,8 +65,17 @@ const Signup = () => {
         email: response.data.email
       });
 
-      login(response.data);
-      navigate('/');
+      setNotification({
+        message: 'Account created successfully! Welcome to CaravaGo!',
+        type: 'success',
+        isVisible: true
+      });
+
+      // Navigate after a brief delay to show success message
+      setTimeout(() => {
+        login(response.data);
+        navigate('/');
+      }, 1500);
     } catch (err) {
       const errorMessage = getUserFriendlyError(err);
       logger.error('Registration failed', {
@@ -71,7 +83,7 @@ const Signup = () => {
         status: err.response?.status
       });
 
-      setError(errorMessage);
+      setNotification({ message: errorMessage, type: 'error', isVisible: true });
     } finally {
       setLoading(false);
     }
@@ -109,40 +121,50 @@ const Signup = () => {
     }
   };
 
+  const accountLinks = (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1, duration: 0.4 }}
+    >
+      <p className="text-sm text-black/70">
+        Already have an account?{' '}
+        <Link
+          to="/signin"
+          className="font-medium text-main hover:text-main-dark transition-colors"
+        >
+          Sign in
+        </Link>
+      </p>
+    </motion.div>
+  );
+
+  const handleNotificationClose = () => {
+    setNotification(prev => ({ ...prev, isVisible: false }));
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={backgroundImage}
-          alt="Background"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-main/40"></div>
-      </div>
+    <>
+      <AuthLayout accountLinks={accountLinks}>
+      <motion.div
+        className="text-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
+      >
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Create an account
+        </h2>
+        <p className="text-xs text-gray-600 mb-4">
+          Sign up and get 30 day free trial
+        </p>
+      </motion.div>
 
       <motion.div
-        className="relative z-10 max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-2xl"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <Link to="/" className="inline-block mb-4">
-            <img src={logo} alt="CaravaGo" className="h-12 w-auto mx-auto" />
-          </Link>
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-            Start your journey
-          </h2>
-          <p className="text-sm text-gray-600">
-            Create an account to begin your adventure
-          </p>
-        </motion.div>
         <motion.form
           className="mt-8 space-y-6"
           onSubmit={handleSubmit}
@@ -150,101 +172,51 @@ const Signup = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          {error && (
-            <motion.div
-              className="bg-red-50 border-l-4 border-red-400 p-4 rounded"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="flex">
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
           <div className="space-y-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-            >
-              <label htmlFor="name" className="block text-sm font-medium text-black mb-1">
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all duration-200 hover:border-main/50"
-                placeholder="John Doe"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.4 }}
-            >
-              <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all duration-200 hover:border-main/50"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.4 }}
-            >
-              <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={6}
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all duration-200 hover:border-main/50"
-                placeholder="At least 6 characters"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.4 }}
-            >
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-black mb-1">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all duration-200 hover:border-main/50"
-                placeholder="Re-enter your password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </motion.div>
+            <Input
+              label="Full Name"
+              id="name"
+              name="name"
+              type="text"
+              required
+              placeholder="John Doe"
+              value={formData.name}
+              onChange={handleChange}
+            />
+            <Input
+              label="Email address"
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              placeholder="you@example.com"
+              value={formData.email}
+              onChange={handleChange}
+            />
+            <Input
+              label="Password"
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={6}
+              placeholder="At least 6 characters"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            <Input
+              label="Confirm Password"
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              required
+              placeholder="Re-enter your password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+            />
           </div>
 
           <motion.div
@@ -252,44 +224,27 @@ const Signup = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9, duration: 0.4 }}
           >
-            <button
+            <Button
               type="submit"
+              loading={loading}
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full"
+              size="default"
             >
-              {loading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating account...
-                </span>
-              ) : (
-                'Sign up'
-              )}
-            </button>
+              {loading ? 'Creating account...' : 'Sign up'}
+            </Button>
           </motion.div>
 
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.4 }}
-          >
-            <p className="text-sm text-black/70">
-              Already have an account?{' '}
-              <Link
-                to="/signin"
-                className="font-medium text-main hover:text-main-dark transition-colors"
-              >
-                Sign in
-              </Link>
-            </p>
-          </motion.div>
         </motion.form>
       </motion.div>
-    </div>
+    </AuthLayout>
+    <Notification
+      message={notification.message}
+      type={notification.type}
+      isVisible={notification.isVisible}
+      onClose={handleNotificationClose}
+    />
+  </>
   );
 };
 
