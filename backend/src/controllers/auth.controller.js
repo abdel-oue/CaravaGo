@@ -54,11 +54,21 @@ export const register = async (req, res) => {
         userName: user.name
       });
 
+      const token = generateToken(user.id);
+
+      // Set HTTP-only cookie with JWT token
+      res.cookie('token', token, {
+        httpOnly: true, // Prevents JavaScript access to the cookie
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        sameSite: 'strict', // CSRF protection
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
+      });
+
       res.status(201).json({
         id: user.id,
         name: user.name,
         email: user.email,
-        token: generateToken(user.id),
+        token: token, // Still return token in response for frontend flexibility
       });
     } else {
       authLogger.error('User creation failed: invalid user data returned', { email, userName });
@@ -107,11 +117,21 @@ export const login = async (req, res) => {
       name: user.name
     });
 
+    const token = generateToken(user.id);
+
+    // Set HTTP-only cookie with JWT token
+    res.cookie('token', token, {
+      httpOnly: true, // Prevents JavaScript access to the cookie
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      sameSite: 'strict', // CSRF protection
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
+    });
+
     res.json({
       id: user.id,
       name: user.name,
       email: user.email,
-      token: generateToken(user.id),
+      token: token, // Still return token in response for frontend flexibility
     });
   } catch (error) {
     authLogger.error('Login process failed with exception', { email }, error);
@@ -147,6 +167,29 @@ export const getMe = async (req, res) => {
   } catch (error) {
     authLogger.error('Failed to retrieve current user data', { userId: req.user?.id }, error);
     res.status(500).json({ message: 'Server error occurred while retrieving user data' });
+  }
+};
+
+// @desc    Logout user / clear cookie
+// @route   POST /api/auth/logout
+// @access  Public
+export const logout = async (req, res) => {
+  try {
+    authLogger.info('User logout initiated', { userId: req.user?.id });
+
+    // Clear the authentication cookie
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    authLogger.success('User logout successful', { userId: req.user?.id });
+
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    authLogger.error('Logout process failed with exception', { userId: req.user?.id }, error);
+    res.status(500).json({ message: 'Server error occurred during logout' });
   }
 };
 
