@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { sendPasswordResetEmail, sendPasswordResetSuccessEmail } from '../utils/email.js';
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -41,6 +43,14 @@ const userSchema = new mongoose.Schema({
   },
   stripe_customer_id: {
     type: String,
+    default: null
+  },
+  passwordResetToken: {
+    type: String,
+    default: null
+  },
+  passwordResetExpires: {
+    type: Date,
     default: null
   }
 }, {
@@ -158,6 +168,67 @@ class UserService {
   // Instance method access
   static async comparePassword(user, candidatePassword) {
     return await user.comparePassword(candidatePassword);
+  }
+
+  // Forgot password - generate token and send email
+  static async forgotPassword(email) {
+    try {
+      const user = await User.findByEmail(email);
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        return { success: true, message: 'If an account with that email exists, a password reset link has been sent.' };
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+
+      // Hash token and set to resetPasswordToken field
+      user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+      // Set expire time (10 minutes)
+      user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+      await user.save();
+
+      // Send password reset email
+      await sendPasswordResetEmail(email, resetToken);
+
+      return { success: true, message: 'Password reset link sent to your email.' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Reset password using token
+  static async resetPassword(token, newPassword) {
+    try {
+      // Hash the token to compare with stored hash
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+      // Find user with valid token that hasn't expired
+      const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() }
+      });
+
+      if (!user) {
+        throw new Error('Token is invalid or has expired');
+      }
+
+      // Set new password (will be hashed by pre-save middleware)
+      user.password = newPassword;
+      user.passwordResetToken = null;
+      user.passwordResetExpires = null;
+
+      await user.save();
+
+      // Send password reset success email
+      await sendPasswordResetSuccessEmail(user.email);
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

@@ -193,3 +193,93 @@ export const logout = async (req, res) => {
   }
 };
 
+// @desc    Forgot password - send reset email
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    authLogger.info('Forgot password request started', { email });
+
+    // Validation
+    if (!email) {
+      authLogger.warning('Forgot password validation failed: missing email');
+      return res.status(400).json({ message: 'Please provide an email address' });
+    }
+
+    // Check if email format is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      authLogger.warning('Forgot password validation failed: invalid email format', { email });
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    // Generate reset token and send email
+    const result = await UserService.forgotPassword(email);
+
+    authLogger.success('Forgot password request processed', {
+      email,
+      success: result.success,
+      message: result.message
+    });
+
+    res.json({ message: result.message });
+  } catch (error) {
+    authLogger.error('Forgot password process failed with exception', { email: req.body.email }, error);
+    res.status(500).json({ message: 'Server error occurred during password reset request' });
+  }
+};
+
+// @desc    Reset password using token
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    authLogger.info('Password reset request started');
+
+    // Validation
+    if (!token || !password) {
+      authLogger.warning('Password reset validation failed: missing token or password');
+      return res.status(400).json({ message: 'Please provide token and new password' });
+    }
+
+    if (password.length < 6) {
+      authLogger.warning('Password reset validation failed: password too short');
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    // Reset password
+    const user = await UserService.resetPassword(token, password);
+
+    authLogger.success('Password reset successful', {
+      userId: user.id,
+      email: user.email
+    });
+
+    // Generate new JWT token for the user
+    const newToken = generateToken(user.id);
+
+    // Set HTTP-only cookie with new JWT token
+    res.cookie('token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
+    });
+
+    res.json({
+      message: 'Password reset successful',
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      token: newToken
+    });
+  } catch (error) {
+    authLogger.error('Password reset process failed with exception', null, error);
+    res.status(400).json({ message: error.message || 'Server error occurred during password reset' });
+  }
+};
+

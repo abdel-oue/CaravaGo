@@ -1,28 +1,74 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
 import authBackground from '../public/auth-background.jpg';
 import logo from '../public/logo-cropped.png';
 
-const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
+const ResetPassword = () => {
+  const [formData, setFormData] = useState({
+    password: '',
+    confirmPassword: '',
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [token, setToken] = useState('');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    // Get token from URL parameters
+    const urlToken = searchParams.get('token');
+    if (urlToken) {
+      setToken(urlToken);
+    } else {
+      setError('Invalid reset link. Please request a new password reset.');
+    }
+  }, [searchParams]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+    // Clear error when user starts typing
+    if (error) setError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await api.post('/auth/forgot-password', { email });
-      setSuccessMessage(response.data.message);
+      await api.post('/auth/reset-password', {
+        token,
+        password: formData.password,
+      });
+
       setSuccess(true);
+
+      // Redirect to sign in after 3 seconds
+      setTimeout(() => {
+        navigate('/signin');
+      }, 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send reset email. Please try again.');
+      setError(err.response?.data?.message || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -59,7 +105,7 @@ const ForgotPassword = () => {
             Reset your password
           </h2>
           <p className="text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your password
+            Enter your new password below
           </p>
         </motion.div>
 
@@ -92,19 +138,39 @@ const ForgotPassword = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.4 }}
               >
-                <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
-                  Email address
+                <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
+                  New password
                 </label>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
                   required
                   className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all duration-200 hover:border-main/50"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your new password"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.4 }}
+              >
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-black mb-1">
+                  Confirm new password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all duration-200 hover:border-main/50"
+                  placeholder="Confirm your new password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
                 />
               </motion.div>
             </div>
@@ -112,11 +178,11 @@ const ForgotPassword = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.4 }}
+              transition={{ delay: 0.7, duration: 0.4 }}
             >
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !token || token === ''}
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 {loading ? (
@@ -125,10 +191,10 @@ const ForgotPassword = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Sending reset link...
+                    Resetting password...
                   </span>
                 ) : (
-                  'Send reset link'
+                  'Reset password'
                 )}
               </button>
             </motion.div>
@@ -137,7 +203,7 @@ const ForgotPassword = () => {
               className="text-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.4 }}
+              transition={{ delay: 0.8, duration: 0.4 }}
             >
               <p className="text-sm text-black/70">
                 Remember your password?{' '}
@@ -161,7 +227,7 @@ const ForgotPassword = () => {
               <div className="flex">
                 <div className="ml-3">
                   <p className="text-sm text-green-700">
-                    {successMessage}
+                    Password reset successful! You will be redirected to the sign in page.
                   </p>
                 </div>
               </div>
@@ -177,7 +243,7 @@ const ForgotPassword = () => {
                 to="/signin"
                 className="font-medium text-main hover:text-main-dark transition-colors"
               >
-                Back to sign in
+                Go to sign in
               </Link>
             </motion.div>
           </motion.div>
@@ -187,4 +253,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default ResetPassword;
