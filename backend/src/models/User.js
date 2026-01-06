@@ -10,7 +10,7 @@ class UserService {
       // Hash the password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-
+      
       // Insert user into Supabase
       const { data, error } = await supabase
         .from('users')
