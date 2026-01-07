@@ -7,3 +7,4 @@ export { default as ReservationsSection } from './ReservationsSection';
 export { default as ListingsSection } from './ListingsSection';
 export { default as SecuritySection } from './SecuritySection';
 export { default as NotificationsSection } from './NotificationsSection';
+export { default as ProfileEditForm } from './ProfileEditForm';

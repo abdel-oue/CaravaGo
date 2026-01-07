@@ -117,14 +117,6 @@ export const verifyEmail = async (req, res) => {
     // Generate JWT token for immediate login after verification
     const jwtToken = generateToken(user.id);
 
-    // Set HTTP-only cookie with JWT token
-    res.cookie('token', jwtToken, {
-      httpOnly: true, // Prevents JavaScript access to the cookie
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: 'strict', // CSRF protection
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
-    });
-
     res.json({
       message: 'Email verified successfully! Welcome to CaravaGo.',
       user: {
@@ -180,54 +172,15 @@ export const login = async (req, res) => {
 
     const token = generateToken(user.id);
 
-    // Set HTTP-only cookie with JWT token
-    res.cookie('token', token, {
-      httpOnly: true, // Prevents JavaScript access to the cookie
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: 'strict', // CSRF protection
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
-    });
-
     res.json({
       id: user.id,
       name: user.name,
       email: user.email,
-      token: token, // Still return token in response for frontend flexibility
+      token: token,
     });
   } catch (error) {
     authLogger.error('Login process failed with exception', { email }, error);
     res.status(500).json({ message: 'Server error occurred during login' });
-  }
-};
-
-// @desc    Get current user
-// @route   GET /api/auth/me
-// @access  Private
-export const getMe = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    authLogger.info('Fetching current user data', { userId });
-
-    const user = await UserService.findById(userId);
-    if (!user) {
-      authLogger.warning('Current user not found', { userId });
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    authLogger.success('Current user data retrieved', {
-      userId: user.id,
-      email: user.email,
-      name: user.name
-    });
-
-    res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    });
-  } catch (error) {
-    authLogger.error('Failed to retrieve current user data', { userId: req.user?.id }, error);
-    res.status(500).json({ message: 'Server error occurred while retrieving user data' });
   }
 };
 
@@ -237,13 +190,6 @@ export const getMe = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     authLogger.info('User logout initiated', { userId: req.user?.id });
-
-    // Clear the authentication cookie
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
-    });
 
     authLogger.success('User logout successful', { userId: req.user?.id });
 
@@ -323,14 +269,6 @@ export const resetPassword = async (req, res) => {
     // Generate new JWT token for the user
     const newToken = generateToken(user.id);
 
-    // Set HTTP-only cookie with new JWT token
-    res.cookie('token', newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
-    });
-
     res.json({
       message: 'Password reset successful',
       id: user.id,
@@ -341,6 +279,155 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     authLogger.error('Password reset process failed with exception', null, error);
     res.status(400).json({ message: error.message || 'Server error occurred during password reset' });
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { firstName, lastName, phone, address, bio } = req.body;
+
+    authLogger.info('Profile update attempt started', { userId });
+
+    // Validation - ensure at least one field is provided
+    if (!firstName && !lastName && !phone && !address && !bio) {
+      authLogger.warning('Profile update validation failed: no fields provided', { userId });
+      return res.status(400).json({ message: 'Please provide at least one field to update' });
+    }
+
+    // Validate phone format if provided
+    if (phone && phone.trim()) {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+        authLogger.warning('Profile update validation failed: invalid phone format', { userId, phone });
+        return res.status(400).json({ message: 'Please provide a valid phone number' });
+      }
+    }
+
+    // Validate name lengths if provided
+    if (firstName && firstName.length > 50) {
+      return res.status(400).json({ message: 'First name must be less than 50 characters' });
+    }
+    if (lastName && lastName.length > 50) {
+      return res.status(400).json({ message: 'Last name must be less than 50 characters' });
+    }
+
+    // Validate bio length if provided
+    if (bio && bio.length > 500) {
+      return res.status(400).json({ message: 'Bio must be less than 500 characters' });
+    }
+
+    // Update profile
+    const updatedUser = await UserService.updateProfile(userId, {
+      firstName: firstName?.trim(),
+      lastName: lastName?.trim(),
+      phone: phone?.trim(),
+      address: address?.trim(),
+      bio: bio?.trim()
+    });
+
+    authLogger.success('Profile update successful', {
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      updatedFields: Object.keys(req.body)
+    });
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser.id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+        bio: updatedUser.bio,
+        avatar_url: updatedUser.avatar_url,
+        is_verified: updatedUser.is_verified,
+        is_owner: updatedUser.is_owner
+      }
+    });
+  } catch (error) {
+    authLogger.error('Profile update failed with exception', { userId: req.user?.id }, error);
+    res.status(500).json({ message: 'Server error occurred while updating profile' });
+  }
+};
+
+// @desc    Verify JWT token
+// @route   POST /api/auth/verify-token
+// @access  Public
+export const verifyToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      authLogger.warning('Token verification failed: no token provided');
+      return res.status(400).json({
+        valid: false,
+        message: 'No token provided'
+      });
+    }
+
+    authLogger.info('Token verification attempt started');
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Get user from the token
+    const user = await UserService.findById(decoded.id);
+
+    if (!user) {
+      authLogger.warning('Token verification failed: user not found', { userId: decoded.id });
+      return res.status(401).json({
+        valid: false,
+        message: 'User not found'
+      });
+    }
+
+    authLogger.success('Token verification successful', {
+      userId: user.id,
+      email: user.email,
+      name: user.name
+    });
+
+    res.json({
+      valid: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        is_verified: user.is_verified,
+        is_owner: user.is_owner
+      },
+      message: 'Token is valid'
+    });
+
+  } catch (error) {
+    authLogger.error('Token verification failed with exception', error);
+
+    // Handle specific JWT errors
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        valid: false,
+        message: 'Invalid token format'
+      });
+    }
+
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        valid: false,
+        message: 'Token has expired'
+      });
+    }
+
+    res.status(500).json({
+      valid: false,
+      message: 'Server error occurred during token verification'
+    });
   }
 };
 

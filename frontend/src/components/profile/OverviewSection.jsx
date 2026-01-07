@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-const OverviewSection = ({ mockReservations, mockListings, user }) => {
+const OverviewSection = ({ userBookings, userListings, user, bookingsLoading, listingsLoading }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -17,7 +17,9 @@ const OverviewSection = ({ mockReservations, mockListings, user }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Reservations</p>
-                <p className="text-2xl font-bold text-primary mt-1">{mockReservations.length}</p>
+                <p className="text-2xl font-bold text-primary mt-1">
+                  {bookingsLoading ? '...' : userBookings.length}
+                </p>
               </div>
               <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,7 +33,9 @@ const OverviewSection = ({ mockReservations, mockListings, user }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Listings</p>
-                <p className="text-2xl font-bold text-secondary mt-1">{mockListings.length}</p>
+                <p className="text-2xl font-bold text-secondary mt-1">
+                  {listingsLoading ? '...' : userListings.length}
+                </p>
               </div>
               <div className="w-10 h-10 bg-secondary/20 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -4,9 +4,6 @@ import { authLogger } from '../utils/logger.js';
 
 const router = express.Router();
 
-// All routes in this file require API key authentication
-router.use(validateApiKey);
-
 // Example external API route - proxy to CaravaGo API
 router.get('/caravago-data', async (req, res) => {
   try {

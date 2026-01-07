@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import externalRoutes from './routes/external.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 dotenv.config({ path: '../.env' });
 
@@ -36,12 +36,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Middleware
-app.use(cookieParser()); // Parse cookies
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/external', externalRoutes);
 
 const PORT = process.env.PORT || 4000;
