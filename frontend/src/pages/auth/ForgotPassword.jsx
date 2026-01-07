@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import AuthLayout from './AuthLayout';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Notification from '../../components/ui/Notification';
+import AlreadyAuthenticatedCard from '../../components/ui/AlreadyAuthenticatedCard';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +15,12 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const { user, loading: authLoading } = useAuth();
+
+  // If user is already authenticated, show the already authenticated card
+  if (!authLoading && user) {
+    return <AlreadyAuthenticatedCard />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

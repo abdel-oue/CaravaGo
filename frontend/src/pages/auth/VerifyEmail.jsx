@@ -17,9 +17,14 @@ const VerifyEmail = () => {
   const [success, setSuccess] = useState(false);
   const [token, setToken] = useState('');
   const [email, setEmail] = useState('');
+  const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login } = useAuth();
+
+  // If user is already authenticated and verified, show the already authenticated card
+  if (!authLoading && user && user.is_verified) {
+    return <AlreadyAuthenticatedCard />;
+  }
 
   useEffect(() => {
     // Get token from URL parameters

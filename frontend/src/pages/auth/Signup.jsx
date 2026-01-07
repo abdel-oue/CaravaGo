@@ -8,6 +8,7 @@ import AuthLayout from './AuthLayout';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Notification from '../../components/ui/Notification';
+import AlreadyAuthenticatedCard from '../../components/ui/AlreadyAuthenticatedCard';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -18,8 +19,13 @@ const Signup = () => {
   });
   const [notification, setNotification] = useState({ message: '', type: 'error', isVisible: false });
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // If user is already authenticated, show the already authenticated card
+  if (!authLoading && user) {
+    return <AlreadyAuthenticatedCard />;
+  }
 
   const handleChange = (e) => {
     setFormData({

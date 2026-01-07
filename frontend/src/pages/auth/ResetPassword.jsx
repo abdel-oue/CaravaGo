@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import AuthLayout from './AuthLayout';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Notification from '../../components/ui/Notification';
+import AlreadyAuthenticatedCard from '../../components/ui/AlreadyAuthenticatedCard';
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -16,8 +18,14 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [token, setToken] = useState('');
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // If user is already authenticated and not using a reset token, show the already authenticated card
+  if (!authLoading && user && !searchParams.get('token')) {
+    return <AlreadyAuthenticatedCard />;
+  }
 
   useEffect(() => {
     // Get token from URL parameters
