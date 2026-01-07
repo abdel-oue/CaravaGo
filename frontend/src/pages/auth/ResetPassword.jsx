@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import api from '../api/axios';
+import api from '../../api/axios';
 import AuthLayout from './AuthLayout';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
-import Notification from '../components/ui/Notification';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+import Notification from '../../components/ui/Notification';
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -110,7 +110,7 @@ const ResetPassword = () => {
           Reset your password
         </h2>
         <p className="text-xs text-gray-600 mb-4">
-          Enter your new password below
+          Choose a secure password for your account
         </p>
       </motion.div>
 

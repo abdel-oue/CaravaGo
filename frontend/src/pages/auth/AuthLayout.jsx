@@ -1,6 +1,6 @@
 import React from "react";
-import logo from "../public/logo-cropped.png";
-import defaultImage from "../public/auth-background.jpg";
+import logo from "../../public/logo-cropped.png";
+import defaultImage from "../../public/auth-background.jpg";
 
 const AuthLayout = ({ children, accountLinks, image = defaultImage }) => {
   return (
@@ -12,7 +12,7 @@ const AuthLayout = ({ children, accountLinks, image = defaultImage }) => {
         {/* Left side: form area */}
         <div className="w-full max-w-lg mx-auto md:mx-0 md:w-1/2 md:max-w-none flex flex-col px-10 py-10 md:py-14 relative z-10" style={{ height: '100%' }}>
           {/* Logo - top left */}
-          <div className="flex justify-start mb-8">
+          <div className="flex justify-start mb-4">
             <img src={logo} alt="CaravaGo" className="h-12 w-auto" />
           </div>
 

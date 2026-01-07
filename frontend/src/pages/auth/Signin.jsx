@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
-import api from '../api/axios';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
 import AuthLayout from './AuthLayout';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
-import Notification from '../components/ui/Notification';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+import Notification from '../../components/ui/Notification';
 
 const Signin = () => {
   const [formData, setFormData] = useState({
@@ -172,7 +172,7 @@ const Signin = () => {
           Welcome back!
         </h2>
         <p className="text-xs text-gray-600 mb-4">
-          Sign in to continue your adventure
+          Continue your journey with us
         </p>
       </motion.div>
 

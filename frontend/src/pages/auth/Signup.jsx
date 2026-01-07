@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
-import api from '../api/axios';
-import { logger } from '../utils/logger';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
+import { logger } from '../../utils/logger';
 import AuthLayout from './AuthLayout';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
-import Notification from '../components/ui/Notification';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+import Notification from '../../components/ui/Notification';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -66,16 +66,16 @@ const Signup = () => {
       });
 
       setNotification({
-        message: 'Account created successfully! Welcome to CaravaGo!',
+        message: response.data.message || 'Account created successfully! Please check your email to verify your account.',
         type: 'success',
         isVisible: true
       });
 
-      // Navigate after a brief delay to show success message
+      // Don't auto-login - user needs to verify email first
+      // Show verification message for longer
       setTimeout(() => {
-        login(response.data);
-        navigate('/');
-      }, 1500);
+        navigate('/verify-email');
+      }, 3000);
     } catch (err) {
       const errorMessage = getUserFriendlyError(err);
       logger.error('Registration failed', {
@@ -156,7 +156,7 @@ const Signup = () => {
           Create an account
         </h2>
         <p className="text-xs text-gray-600 mb-4">
-          Sign up and get 30 day free trial
+          Start your RV adventure today
         </p>
       </motion.div>
 
@@ -166,7 +166,7 @@ const Signup = () => {
         transition={{ delay: 0.3, duration: 0.5 }}
       >
         <motion.form
-          className="mt-8 space-y-6"
+          className="mt-2 space-y-6"
           onSubmit={handleSubmit}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

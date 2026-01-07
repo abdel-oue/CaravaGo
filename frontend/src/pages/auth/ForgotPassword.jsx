@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import api from '../api/axios';
+import api from '../../api/axios';
 import AuthLayout from './AuthLayout';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
-import Notification from '../components/ui/Notification';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+import Notification from '../../components/ui/Notification';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -52,7 +52,7 @@ const ForgotPassword = () => {
           Reset your password
         </h2>
         <p className="text-xs text-gray-600 mb-4">
-          Enter your email address and we'll send you a link to reset your password
+        Let's get you back on the road, Enter your email address and we'll send you a link to reset your password
         </p>
       </motion.div>
 

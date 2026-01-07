@@ -52,6 +52,18 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: {
     type: Date,
     default: null
+  },
+  emailVerificationToken: {
+    type: String,
+    default: null
+  },
+  emailVerificationCode: {
+    type: String,
+    default: null
+  },
+  emailVerificationExpires: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true // This creates createdAt and updatedAt automatically
@@ -129,6 +141,102 @@ class UserService {
       if (error.code === 11000) {
         throw new Error('User already exists with this email');
       }
+      throw error;
+    }
+  }
+
+  // Create user with email verification
+  static async createUserWithEmailVerification(userData) {
+    try {
+      const { name, email, password } = userData;
+
+      // Generate email verification token
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+
+      // Generate 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Create new user (password will be hashed by pre-save middleware)
+      const user = new User({
+        name,
+        email: email.toLowerCase(),
+        password,
+        emailVerificationToken: crypto.createHash('sha256').update(verificationToken).digest('hex'),
+        emailVerificationCode: verificationCode,
+        emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+      });
+
+      // Save user (this will trigger the pre-save middleware)
+      const savedUser = await user.save();
+
+      // Return user data needed for email
+      return {
+        user: {
+          id: savedUser._id,
+          name: savedUser.name,
+          email: savedUser.email
+        },
+        verificationToken,
+        verificationCode
+      };
+    } catch (error) {
+      // Handle duplicate key error
+      if (error.code === 11000) {
+        throw new Error('User already exists with this email');
+      }
+      throw error;
+    }
+  }
+
+  // Verify email using token or 6-digit code
+  static async verifyEmail(tokenOrCode) {
+    try {
+      let user;
+
+      // Check if it's a 6-digit code or a token
+      if (/^\d{6}$/.test(tokenOrCode)) {
+        // It's a 6-digit code
+        user = await User.findOne({
+          emailVerificationCode: tokenOrCode,
+          emailVerificationExpires: { $gt: Date.now() }
+        });
+      } else {
+        // It's a token - hash it and compare
+        const hashedToken = crypto.createHash('sha256').update(tokenOrCode).digest('hex');
+        user = await User.findOne({
+          emailVerificationToken: hashedToken,
+          emailVerificationExpires: { $gt: Date.now() }
+        });
+      }
+
+      if (!user) {
+        throw new Error('Verification code/token is invalid or has expired');
+      }
+
+      if (user.is_verified) {
+        throw new Error('Email is already verified');
+      }
+
+      // Mark email as verified
+      user.is_verified = true;
+      user.emailVerificationToken = null;
+      user.emailVerificationCode = null;
+      user.emailVerificationExpires = null;
+
+      await user.save();
+
+      // Return user without password - ensure virtuals are included
+      const userWithoutPassword = user.toJSON({ virtuals: true });
+      delete userWithoutPassword.password;
+      delete userWithoutPassword.emailVerificationToken;
+      delete userWithoutPassword.emailVerificationCode;
+      delete userWithoutPassword.emailVerificationExpires;
+
+      // Ensure id is available as a string
+      userWithoutPassword.id = user._id.toString();
+
+      return userWithoutPassword;
+    } catch (error) {
       throw error;
     }
   }

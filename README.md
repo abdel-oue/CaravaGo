@@ -93,13 +93,14 @@ CaravaGo/
 │   │   ├── context/           # React context providers
 │   │   │   └── AuthContext.jsx       # Authentication state
 │   │   ├── pages/             # Page components
+│   │   │   ├── auth/           # Authentication pages
+│   │   │   │   ├── AuthLayout.jsx        # Auth page wrapper
+│   │   │   │   ├── Signup.jsx            # User registration
+│   │   │   │   ├── Signin.jsx            # User login
+│   │   │   │   ├── ForgotPassword.jsx    # Password reset request
+│   │   │   │   └── ResetPassword.jsx     # Password reset form
 │   │   │   ├── Home.jsx              # Landing page
-│   │   │   ├── CreateListing.jsx     # Vehicle listing wizard
-│   │   │   ├── Signup.jsx            # User registration
-│   │   │   ├── Signin.jsx            # User login
-│   │   │   ├── ForgotPassword.jsx    # Password reset request
-│   │   │   ├── ResetPassword.jsx     # Password reset form
-│   │   │   └── AuthLayout.jsx        # Auth page wrapper
+│   │   │   └── CreateListing.jsx     # Vehicle listing wizard
 │   │   ├── public/            # Static assets & images
 │   │   ├── routes/            # Route protection logic
 │   │   ├── utils/             # Utility functions
