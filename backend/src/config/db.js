@@ -1,28 +1,22 @@
-import { createClient } from '@supabase/supabase-js';
+import mongoose from 'mongoose';
 import { dbLogger } from '../utils/logger.js';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const mongoUrl = process.env.MONGO_URL;
 
-if (!supabaseUrl || !supabaseKey) {
-  const error = new Error('Missing Supabase environment variables');
+if (!mongoUrl) {
+  const error = new Error('Missing MongoDB environment variable: MONGO_URL');
   dbLogger.error('Database configuration failed', null, error);
   throw error;
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 const connectDB = async () => {
   try {
-    dbLogger.info('Attempting to connect to Supabase database');
+    dbLogger.info('Attempting to connect to MongoDB database');
 
-    // Test the connection
-    const { error } = await supabase.from('users').select('count').limit(1);
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" which is expected
-      throw error;
-    }
+    // Connect to MongoDB
+    await mongoose.connect(mongoUrl);
 
     dbLogger.success('Database connection established successfully');
   } catch (error) {
@@ -31,6 +25,26 @@ const connectDB = async () => {
   }
 };
 
-export { supabase };
+// Handle connection events
+mongoose.connection.on('connected', () => {
+  dbLogger.info('Mongoose connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+  dbLogger.error('Mongoose connection error', null, err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  dbLogger.warning('Mongoose disconnected from MongoDB');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  dbLogger.info('Received SIGINT, closing MongoDB connection...');
+  await mongoose.connection.close();
+  process.exit(0);
+});
+
+export { mongoose };
 export default connectDB;
 

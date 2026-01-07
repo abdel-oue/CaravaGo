@@ -58,8 +58,14 @@ const Navbar = () => {
 
                         {user ? (
                             <div className={`flex items-center gap-4 pl-4 border-l ${scrolled ? 'border-gray-200' : 'border-white/20'}`}>
+                                <Link
+                                    to="/profile"
+                                    className={`text-sm font-medium transition-colors hover:text-primary ${scrolled ? 'text-gray-600' : 'text-white/90 hover:text-white'}`}
+                                >
+                                    Profile
+                                </Link>
                                 <span className={`text-sm font-medium ${scrolled ? 'text-gray-800' : 'text-white'}`}>
-                                    Hello, <span className={scrolled ? 'text-main' : 'text-white font-bold'}>{user.name}</span>
+                                    Hello, <span className={scrolled ? 'text-main' : 'text-white font-bold'}>{user.name?.split(' ')[0]}</span>
                                 </span>
                                 <button
                                     onClick={logout}
@@ -133,7 +139,8 @@ const Navbar = () => {
                             <div className="h-px bg-gray-100 my-2"></div>
                             {user ? (
                                 <>
-                                    <span className="block text-gray-800 py-2">Welcome, {user.name}</span>
+                                    <span className="block text-gray-800 py-2">Welcome, {user.name?.split(' ')[0]}</span>
+                                    <Link to="/profile" className="block text-gray-600 hover:text-main font-medium text-lg py-2">Profile</Link>
                                     <button
                                         onClick={logout}
                                         className="block w-full text-left text-primary font-bold py-2"

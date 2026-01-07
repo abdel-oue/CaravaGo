@@ -70,6 +70,8 @@ The server will start on the port specified in your `.env` file (default: 4000).
 |--------|----------|-------------|---------|
 | POST | `/register` | Register a new user | Public |
 | POST | `/login` | Authenticate user | Public |
+| POST | `/forgot-password` | Request password reset | Public |
+| POST | `/reset-password` | Reset password with token | Public |
 | GET | `/me` | Get current user info | Private (JWT) |
 
 ### External API Routes (`/api/external`) - API Key Protected
@@ -135,6 +137,45 @@ Authorization: Bearer jwt_token_here
   "id": "uuid",
   "name": "John Doe",
   "email": "john@example.com"
+}
+```
+
+#### Forgot Password
+```bash
+POST /api/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "john@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "If an account with that email exists, a password reset link has been sent."
+}
+```
+
+#### Reset Password
+```bash
+POST /api/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "reset_token_from_email",
+  "password": "newpassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Password reset successful",
+  "id": "uuid",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "token": "new_jwt_token_here"
 }
 ```
 

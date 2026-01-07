@@ -21,11 +21,21 @@ JWT_SECRET=your_jwt_secret_key_here
 ### API Key Configuration
 CARAVAGO_API=caravago_api_key_here
 
+### Email Configuration (for password reset)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+EMAIL_FROM=your_email@gmail.com
+
 ### Server Configuration
 PORT=4000
 
 # Backend API URL
 VITE_API_URL=http://localhost:4000/api
+
+# Frontend URL (for password reset links)
+FRONTEND_URL=http://localhost:3000
 
 # Frontend server port (optional, defaults to 3000)
 FRONTEND_PORT=3000

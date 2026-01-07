@@ -1,6 +1,7 @@
 import UserService from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import { authLogger } from '../utils/logger.js';
+import { sendEmailVerificationEmail } from '../utils/email.js';
 
 import dotenv from 'dotenv';
 
@@ -39,26 +40,43 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Create user
-    authLogger.info('Creating new user account', { email, userName });
-    const user = await UserService.createUser({
+    // Create user with email verification
+    authLogger.info('Creating new user account with email verification', { email, userName });
+    const result = await UserService.createUserWithEmailVerification({
       name: userName,
       email,
       password,
     });
 
-    if (user) {
-      authLogger.success('User registration successful', {
-        userId: user.id,
-        email: user.email,
-        userName: user.name
+    if (result) {
+      authLogger.success('User registration initiated, verification email sent', {
+        userId: result.user.id,
+        email: result.user.email,
+        userName: result.user.name
       });
 
+      // Send email verification
+      try {
+        await sendEmailVerificationEmail(
+          result.user.email,
+          result.verificationToken,
+          result.verificationCode,
+          result.user.name
+        );
+        authLogger.info('Email verification sent successfully', { email: result.user.email });
+      } catch (emailError) {
+        authLogger.error('Failed to send verification email, but user created', { email: result.user.email, error: emailError.message });
+        // Don't fail registration if email fails, but log it
+      }
+
       res.status(201).json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user.id),
+        message: 'Registration successful! Please check your email to verify your account.',
+        user: {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          is_verified: false
+        }
       });
     } else {
       authLogger.error('User creation failed: invalid user data returned', { email, userName });
@@ -67,6 +85,59 @@ export const register = async (req, res) => {
   } catch (error) {
     authLogger.error('Registration process failed with exception', { email, userName }, error);
     res.status(500).json({ message: 'Server error occurred during registration' });
+  }
+};
+
+// @desc    Verify email using token or 6-digit code
+// @route   POST /api/auth/verify-email
+// @access  Public
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token, code } = req.body;
+    const tokenOrCode = token || code;
+
+    authLogger.info('Email verification attempt started', { hasToken: !!token, hasCode: !!code });
+
+    // Validation
+    if (!tokenOrCode) {
+      authLogger.warning('Email verification validation failed: missing token or code');
+      return res.status(400).json({ message: 'Please provide verification token or 6-digit code' });
+    }
+
+    // Verify email
+    const user = await UserService.verifyEmail(tokenOrCode);
+
+    authLogger.success('Email verification successful', {
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      method: /^\d{6}$/.test(tokenOrCode) ? 'code' : 'token'
+    });
+
+    // Generate JWT token for immediate login after verification
+    const jwtToken = generateToken(user.id);
+
+    // Set HTTP-only cookie with JWT token
+    res.cookie('token', jwtToken, {
+      httpOnly: true, // Prevents JavaScript access to the cookie
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      sameSite: 'strict', // CSRF protection
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
+    });
+
+    res.json({
+      message: 'Email verified successfully! Welcome to CaravaGo.',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        is_verified: user.is_verified
+      },
+      token: jwtToken
+    });
+  } catch (error) {
+    authLogger.error('Email verification failed', { token: !!req.body.token, code: !!req.body.code }, error);
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -107,11 +178,21 @@ export const login = async (req, res) => {
       name: user.name
     });
 
+    const token = generateToken(user.id);
+
+    // Set HTTP-only cookie with JWT token
+    res.cookie('token', token, {
+      httpOnly: true, // Prevents JavaScript access to the cookie
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      sameSite: 'strict', // CSRF protection
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
+    });
+
     res.json({
       id: user.id,
       name: user.name,
       email: user.email,
-      token: generateToken(user.id),
+      token: token, // Still return token in response for frontend flexibility
     });
   } catch (error) {
     authLogger.error('Login process failed with exception', { email }, error);
@@ -147,6 +228,119 @@ export const getMe = async (req, res) => {
   } catch (error) {
     authLogger.error('Failed to retrieve current user data', { userId: req.user?.id }, error);
     res.status(500).json({ message: 'Server error occurred while retrieving user data' });
+  }
+};
+
+// @desc    Logout user / clear cookie
+// @route   POST /api/auth/logout
+// @access  Public
+export const logout = async (req, res) => {
+  try {
+    authLogger.info('User logout initiated', { userId: req.user?.id });
+
+    // Clear the authentication cookie
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    authLogger.success('User logout successful', { userId: req.user?.id });
+
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    authLogger.error('Logout process failed with exception', { userId: req.user?.id }, error);
+    res.status(500).json({ message: 'Server error occurred during logout' });
+  }
+};
+
+// @desc    Forgot password - send reset email
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    authLogger.info('Forgot password request started', { email });
+
+    // Validation
+    if (!email) {
+      authLogger.warning('Forgot password validation failed: missing email');
+      return res.status(400).json({ message: 'Please provide an email address' });
+    }
+
+    // Check if email format is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      authLogger.warning('Forgot password validation failed: invalid email format', { email });
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    // Generate reset token and send email
+    const result = await UserService.forgotPassword(email);
+
+    authLogger.success('Forgot password request processed', {
+      email,
+      success: result.success,
+      message: result.message
+    });
+
+    res.json({ message: result.message });
+  } catch (error) {
+    authLogger.error('Forgot password process failed with exception', { email: req.body.email }, error);
+    res.status(500).json({ message: 'Server error occurred during password reset request' });
+  }
+};
+
+// @desc    Reset password using token
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    authLogger.info('Password reset request started');
+
+    // Validation
+    if (!token || !password) {
+      authLogger.warning('Password reset validation failed: missing token or password');
+      return res.status(400).json({ message: 'Please provide token and new password' });
+    }
+
+    if (password.length < 6) {
+      authLogger.warning('Password reset validation failed: password too short');
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    // Reset password
+    const user = await UserService.resetPassword(token, password);
+
+    authLogger.success('Password reset successful', {
+      userId: user.id,
+      email: user.email
+    });
+
+    // Generate new JWT token for the user
+    const newToken = generateToken(user.id);
+
+    // Set HTTP-only cookie with new JWT token
+    res.cookie('token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
+    });
+
+    res.json({
+      message: 'Password reset successful',
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      token: newToken
+    });
+  } catch (error) {
+    authLogger.error('Password reset process failed with exception', null, error);
+    res.status(400).json({ message: error.message || 'Server error occurred during password reset' });
   }
 };
 
