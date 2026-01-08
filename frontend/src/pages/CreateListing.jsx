@@ -1,11 +1,26 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { FaMapMarkerAlt } from 'react-icons/fa';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import { useLocationAutocomplete } from '../hooks/useLocations';
 
 const CreateListing = () => {
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 5;
+
+    // Location autocomplete
+    const {
+        query,
+        setQuery,
+        suggestions,
+        loading: locationLoading,
+        selectedLocation,
+        selectLocation,
+        showDropdown,
+        handleInputFocus,
+        handleInputBlur
+    } = useLocationAutocomplete();
 
     const steps = [
         { id: 1, title: 'Basic Information', description: 'Tell us about your vehicle' },
@@ -63,13 +78,64 @@ const CreateListing = () => {
                                 </select>
                             </div>
 
-                            <div>
+                            <div className="relative">
                                 <label className="block text-sm font-bold text-gray-800 mb-2">Location *</label>
-                                <input
-                                    type="text"
-                                    placeholder="City, Country"
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Choose Moroccan city"
+                                        value={query}
+                                        onChange={(e) => setQuery(e.target.value)}
+                                        onFocus={handleInputFocus}
+                                        onBlur={handleInputBlur}
+                                        className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    />
+                                    <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                    {locationLoading && (
+                                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-primary"></div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Autocomplete Dropdown */}
+                                {showDropdown && suggestions.length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[60] max-h-60 overflow-y-auto mt-1">
+                                        <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                                {query ? 'Search Results' : 'Popular Locations'}
+                                            </div>
+                                        </div>
+                                        {suggestions.map((location) => (
+                                            <div
+                                                key={`${location.city}-${location.country}`}
+                                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                                onClick={() => selectLocation(location)}
+                                            >
+                                                <div className="flex items-center space-x-2">
+                                                    <FaMapMarkerAlt className="text-gray-400 text-sm" />
+                                                    <div>
+                                                        <div className="font-medium text-gray-900">
+                                                            {location.city}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500">
+                                                            {location.region && `${location.region}, `}{location.country}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {selectedLocation && (
+                                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                        <div className="flex items-center text-green-800 text-sm">
+                                            <FaMapMarkerAlt className="mr-2" />
+                                            Selected: {selectedLocation.city}, {selectedLocation.country}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div>

@@ -11,7 +11,8 @@ const vehicleTypes = [
         subtitle: 'Discreet & fun',
         description: 'The campervan is accessible and versatile. Ideal for outdoor enthusiasts and renters who want to feel closer to nature.',
         color: 'bg-pink-100', // Pastel Pink
-        link: '#',
+        link: '/search?vehicleTypes=camper',
+        filterId: 'camper',
         image: campervan
     },
     {
@@ -19,7 +20,8 @@ const vehicleTypes = [
         subtitle: 'Exotic & autonomous',
         description: 'Perfect for couples and short family road trips, the large campervan rhymes with practicality. Handy and compact, it will take you everywhere.',
         color: 'bg-blue-100', // Pastel Blue
-        link: '#',
+        link: '/search?vehicleTypes=van',
+        filterId: 'van',
         image: largeCampervan
     },
     {
@@ -27,7 +29,8 @@ const vehicleTypes = [
         subtitle: 'Compact & equipped',
         description: 'The most compact vehicle of all with all the necessary equipment. A little bonus? Its aerodynamic shape is slightly better for your wallet and the planet.',
         color: 'bg-yellow-100', // Pastel Yellow
-        link: '#',
+        link: '/search?vehicleTypes=low-profile',
+        filterId: 'low-profile',
         image: lowProfile
     },
     {
@@ -35,7 +38,8 @@ const vehicleTypes = [
         subtitle: 'Family-friendly & comfortable',
         description: 'Great comfort for larger crews! A coachbuilt offers you a real taste of freedom while allowing you autonomy during your getaways. Kids will love it.',
         color: 'bg-pink-100', // Pastel Pink
-        link: '#',
+        link: '/search?vehicleTypes=coachbuilt',
+        filterId: 'coachbuilt',
         image: coachbuilt
     },
 ];

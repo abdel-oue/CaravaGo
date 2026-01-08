@@ -288,8 +288,8 @@ const DetailModal = ({ isOpen, onClose, type, data }) => {
         <h4 className="font-semibold text-gray-900 mb-2">Description</h4>
         <p className="text-sm text-gray-700 leading-relaxed">
           Experience the freedom of the open road in this beautifully maintained VW California Ocean campervan.
-          Perfect for couples or solo travelers looking to explore Europe's scenic routes. Fully equipped with
-          everything you need for a comfortable camping adventure.
+          Perfect for couples or solo travelers looking to explore Morocco's stunning landscapes. Fully equipped with
+          everything you need for a comfortable camping adventure across the Kingdom.
         </p>
       </div>
 
