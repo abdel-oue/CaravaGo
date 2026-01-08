@@ -11,6 +11,7 @@ import Search from './pages/Search';
 import Profile from './pages/Profile';
 import CreateListing from './pages/CreateListing';
 import VehicleDetails from './pages/VehicleDetails';
+import UploadTest from './pages/UploadTest';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           />
 
           <Route path="/create-listing" element={<CreateListing />} />
+          <Route path="/upload-test" element={<UploadTest />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={<Home />} />

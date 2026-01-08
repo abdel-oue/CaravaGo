@@ -295,7 +295,7 @@ class UserService {
   // Update user profile
   static async updateProfile(userId, profileData) {
     try {
-      const { firstName, lastName, phone, address, bio } = profileData;
+      const { firstName, lastName, phone, address, bio, avatar_url } = profileData;
 
       // Build update object with only provided fields
       const updateData = {};
@@ -304,6 +304,7 @@ class UserService {
       if (phone !== undefined) updateData.phone = phone;
       if (address !== undefined) updateData.address = address;
       if (bio !== undefined) updateData.bio = bio;
+      if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
 
       // If firstName or lastName is being updated, also update the main name field
       if (firstName !== undefined || lastName !== undefined) {
