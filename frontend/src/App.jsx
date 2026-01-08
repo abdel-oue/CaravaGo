@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Search from './pages/Search';
 import Profile from './pages/Profile';
 import CreateListing from './pages/CreateListing';
+import VehicleDetails from './pages/VehicleDetails';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/vehicle/:id" element={<VehicleDetails />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/profile" element={
             <ProtectedRoute>
