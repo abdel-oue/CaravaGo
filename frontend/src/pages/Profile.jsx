@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import {
   ProfileSidebar,
   OverviewSection,
@@ -20,7 +21,7 @@ import {
 } from '../hooks/useUserData';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
 
   // Fetch real data from API with real-time updates
@@ -30,6 +31,20 @@ const Profile = () => {
   const { favorites: userFavorites, loading: favoritesLoading } = useUserFavorites(true);
   const { messages: userMessages, loading: messagesLoading } = useUserMessages(true);
   const { notifications: userNotifications, loading: notificationsLoading, markAsRead } = useUserNotifications(true);
+
+  // Wait for AuthContext to finish loading before checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+      </div>
+    );
+  }
+
+  // Check if user exists, if not redirect to signin
+  if (!user) {
+    return <Navigate to="/signin" replace />;
+  }
 
   const renderContent = () => {
     switch (activeSection) {

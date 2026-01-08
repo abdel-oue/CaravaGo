@@ -400,8 +400,15 @@ export const verifyToken = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        avatar_url: user.avatar_url,
+        phone: user.phone,
+        address: user.address,
+        bio: user.bio,
         is_verified: user.is_verified,
-        is_owner: user.is_owner
+        is_owner: user.is_owner,
+        stripe_customer_id: user.stripe_customer_id,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
       },
       message: 'Token is valid'
     });
