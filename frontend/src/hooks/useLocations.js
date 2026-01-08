@@ -189,6 +189,7 @@ export const useLocationAutocomplete = () => {
     clearSelection,
     showDropdown,
     handleInputFocus,
-    handleInputBlur
+    handleInputBlur,
+    setShowDropdown
   };
 };
