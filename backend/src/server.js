@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import userRoutes from './routes/user.routes.js';
+import locationRoutes from './routes/location.routes.js';
 
 dotenv.config({ path: '../.env' });
 
@@ -43,6 +44,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/locations', locationRoutes);
 
 const PORT = process.env.PORT || 4000;
 

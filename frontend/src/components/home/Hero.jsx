@@ -1,20 +1,39 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { FaMapMarkerAlt } from 'react-icons/fa';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { useLocationAutocomplete } from '../../hooks/useLocations';
 import heroImage from '../../public/heroimgtesst.jpg';
 
 const Hero = () => {
     const navigate = useNavigate();
-    const [location, setLocation] = useState('');
+    const {
+        query,
+        setQuery,
+        suggestions,
+        loading: locationLoading,
+        selectedLocation,
+        selectLocation,
+        clearSelection,
+        showDropdown,
+        handleInputFocus,
+        handleInputBlur
+    } = useLocationAutocomplete();
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
 
     const handleSearch = () => {
         // Navigate to search page with query parameters
         const params = new URLSearchParams();
-        if (location) params.set('destination', location);
+        if (selectedLocation) {
+            params.set('destination', `${selectedLocation.city}, ${selectedLocation.country}`);
+            params.set('lat', selectedLocation.latitude);
+            params.set('lng', selectedLocation.longitude);
+        } else if (query) {
+            params.set('destination', query);
+        }
         if (startDate) params.set('startDate', startDate.toLocaleDateString());
         if (endDate) params.set('endDate', endDate.toLocaleDateString());
         navigate(`/search?${params.toString()}`);
@@ -38,11 +57,11 @@ const Hero = () => {
                         transition={{ duration: 0.8 }}
                     >
                         <h1 className="text-5xl lg:text-6xl font-bold leading-tight mb-4 font-lexend">
-                            Choose your route,<br />
-                            Travel your way
+                            Discover Morocco,<br />
+                            Your way
                         </h1>
                         <p className="text-xl text-white/90 font-light">
-                            RV rental marketplace
+                            Morocco's premier campervan & motorhome rental platform
                         </p>
                     </motion.div>
                 </div>
@@ -58,22 +77,61 @@ const Hero = () => {
             </div>
 
             {/* Floating Search Bar */}
-            <div className="absolute top-[85%] lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[150px] w-full px-4 sm:px-6 lg:px-0 z-20 pointer-events-none">
+            <div className="absolute top-[85%] lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[150px] w-full px-4sm:px-6 lg:px-0 z-30 pointer-events-none">
                 <motion.div
-                    className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto pointer-events-auto flex flex-col md:flex-row overflow-hidden border border-gray-100"
+                    className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto pointer-events-auto flex flex-col md:flex-row border border-gray-100"
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4">
+                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4 relative">
                         <label className="block text-sm font-bold text-gray-800 mb-1">Where?</label>
-                        <input
-                            type="text"
-                            placeholder="Pick-up location"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            className="w-full outline-none text-gray-600 placeholder-gray-400"
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Choose Moroccan city"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onFocus={handleInputFocus}
+                                onBlur={handleInputBlur}
+                                className="w-full outline-none text-gray-600 placeholder-gray-400"
+                            />
+                            {locationLoading && (
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Autocomplete Dropdown */}
+                        {showDropdown && suggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-lg shadow-lg z-[160] max-h-60 overflow-y-auto mt-1">
+                                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                        {query ? 'Search Results' : 'Popular Locations'}
+                                    </div>
+                                </div>
+                                {suggestions.map((location) => (
+                                    <div
+                                        key={`${location.city}-${location.country}`}
+                                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                        onClick={() => selectLocation(location)}
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <FaMapMarkerAlt className="text-gray-400 text-sm" />
+                                            <div>
+                                                <div className="font-medium text-gray-900">
+                                                    {location.city}
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    {location.region && `${location.region}, `}{location.country}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Date Input */}
@@ -126,7 +184,7 @@ const Hero = () => {
                                 {/* Using a generic swap/vehicle icon placeholder as SVG */}
                                 <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                             </span>
-                            <p className="max-w-[150px]">The largest selection of vehicles in Europe</p>
+                            <p className="max-w-[150px]">Morocco's largest campervan selection</p>
                         </div>
 
                         {/* Global */}
@@ -134,7 +192,7 @@ const Hero = () => {
                             <span className="text-4xl text-[#007A9F]">
                                 <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </span>
-                            <p className="max-w-[150px]">Departing trips from Europe or elsewhere</p>
+                            <p className="max-w-[150px]">Explore Morocco from any city</p>
                         </div>
 
                         {/* Insurance */}
