@@ -20,13 +20,26 @@ const Hero = () => {
         clearSelection,
         showDropdown,
         handleInputFocus,
-        handleInputBlur
+        handleInputBlur,
+        setShowDropdown
     } = useLocationAutocomplete();
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [isLocating, setIsLocating] = useState(false);
 
-
+    // Hardcoded popular locations as requested
+    const popularLocations = [
+        { city: 'Marrakech', country: 'Morocco' },
+        { city: 'Agadir', country: 'Morocco' },
+        { city: 'Casablanca', country: 'Morocco' },
+        { city: 'Tangier', country: 'Morocco' },
+        { city: 'Essaouira', country: 'Morocco' },
+        { city: 'Fez', country: 'Morocco' },
+        { city: 'Rabat', country: 'Morocco' },
+        { city: 'Chefchaouen', country: 'Morocco' },
+        { city: 'Ouarzazate', country: 'Morocco' },
+        { city: 'Merzouga', country: 'Morocco' },
+    ];
 
     const handleCurrentLocation = () => {
         setIsLocating(true);
@@ -48,8 +61,8 @@ const Hero = () => {
                     const fallbackLocation = {
                         city: "Current Location",
                         country: "Nearby",
-                        latitude: 51.5074, // Default to London or similar or null
-                        longitude: -0.1278
+                        latitude: 31.6295, // Marrakech
+                        longitude: -7.9811
                     };
                     selectLocation(fallbackLocation);
                     setIsLocating(false);
@@ -61,14 +74,15 @@ const Hero = () => {
         }
     };
 
-
     const handleSearch = () => {
         // Navigate to search page with query parameters
         const params = new URLSearchParams();
         if (selectedLocation) {
             params.set('destination', `${selectedLocation.city}, ${selectedLocation.country}`);
-            params.set('lat', selectedLocation.latitude);
-            params.set('lng', selectedLocation.longitude);
+            if (selectedLocation.latitude && selectedLocation.longitude) {
+                params.set('lat', selectedLocation.latitude);
+                params.set('lng', selectedLocation.longitude);
+            }
         } else if (query) {
             params.set('destination', query);
         }
@@ -76,6 +90,11 @@ const Hero = () => {
         if (endDate) params.set('endDate', endDate.toLocaleDateString());
         navigate(`/search?${params.toString()}`);
     };
+
+    // Determine what suggestions to show
+    const displaySuggestions = query.length < 2
+        ? popularLocations
+        : suggestions;
 
     return (
         <section className="relative w-full mb-20">
@@ -115,36 +134,39 @@ const Hero = () => {
             </div>
 
             {/* Floating Search Bar */}
-            <div className="absolute top-[85%] lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[150px] w-full px-4 sm:px-6 lg:px-0 z-20 pointer-events-none">
+            <div className="absolute top-[85%] lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[150px] w-full px-4 sm:px-6 lg:px-0 z-40 pointer-events-none">
                 <motion.div
                     className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto pointer-events-auto flex flex-col md:flex-row border border-gray-100"
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4">
+                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4 relative">
                         <label className="block text-sm font-bold text-gray-800 mb-1">Where?</label>
                         <input
                             type="text"
                             placeholder="Pick-up location"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            onFocus={handleInputFocus}
+                            onFocus={() => {
+                                handleInputFocus();
+                                setShowDropdown(true);
+                            }}
                             onBlur={handleInputBlur}
                             className="w-full outline-none text-gray-600 placeholder-gray-400"
                         />
 
                         {/* Location Suggestions Dropdown */}
                         {showDropdown && (
-                            <div className="absolute top-full left-0 w-[400px] bg-white rounded-lg shadow-xl border border-gray-100 z-50 mt-2 p-4 flex gap-4 max-h-[400px] overflow-y-auto">
+                            <div className="absolute top-full left-0 w-[600px] bg-white rounded-lg shadow-xl border border-gray-100 z-50 mt-2 p-4 flex gap-4 max-h-[400px] overflow-y-auto">
                                 {/* Popular/Suggested Searches */}
                                 <div className="flex-1">
                                     <h3 className="text-sm font-bold text-gray-900 mb-3">
                                         {query.length < 2 ? "Popular searches" : "Suggestions"}
                                     </h3>
                                     <div className="space-y-3">
-                                        {suggestions.length > 0 ? (
-                                            suggestions.map((loc, index) => (
+                                        {displaySuggestions.length > 0 ? (
+                                            displaySuggestions.map((loc, index) => (
                                                 <div
                                                     key={index}
                                                     className="flex items-start gap-3 cursor-pointer group hover:bg-gray-50 p-2 rounded-md transition-colors"
