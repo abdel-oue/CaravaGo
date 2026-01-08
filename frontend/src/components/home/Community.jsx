@@ -1,10 +1,16 @@
 import { motion } from 'framer-motion';
 
+import review1 from '../../public/review1.png';
+import review2 from '../../public/review2.png';
+import review3 from '../../public/review3.png';
+import review4 from '../../public/review4.png';
+
 const Community = () => {
     const users = [
-        { name: 'Andrei', date: 'February 2025', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' },
-        { name: 'Vyacheslav', date: 'August 2024', image: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?auto=format&fit=crop&w=300&q=80' },
-        { name: 'Tanya', date: 'July 2023', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Andrei', date: 'February 2025', image: review1 },
+        { name: 'Vyacheslav', date: 'August 2024', image: review2 },
+        { name: 'Tanya', date: 'July 2023', image: review3 },
+        { name: 'Sarah', date: 'December 2024', image: review4 },
     ];
 
     return (
@@ -18,7 +24,7 @@ const Community = () => {
                             {users.map((user, i) => (
                                 <motion.div
                                     key={i}
-                                    className={`relative rounded-2xl overflow-hidden shadow-lg aspect-[4/5] ${i === 1 ? 'mt-12' : ''}`}
+                                    className={`relative rounded-2xl overflow-hidden shadow-lg aspect-[4/5] ${i % 2 !== 0 ? 'mt-12' : ''}`}
                                     initial={{ opacity: 0, x: -20 }}
                                     whileInView={{ opacity: 1, x: 0 }}
                                     transition={{ delay: i * 0.2 }}
@@ -30,10 +36,6 @@ const Community = () => {
                                     </div>
                                 </motion.div>
                             ))}
-                            {/* Fake 4th item for grid balance */}
-                            <div className="rounded-2xl bg-bgLight flex items-center justify-center aspect-[4/5] mt-12">
-                                <span className="text-4xl">🚐</span>
-                            </div>
                         </div>
                     </div>
 

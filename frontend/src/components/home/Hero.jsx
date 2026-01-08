@@ -1,12 +1,24 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import heroImage from '../../public/heroimgtesst.jpg';
 
 const Hero = () => {
+    const navigate = useNavigate();
+    const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
+
+    const handleSearch = () => {
+        // Navigate to search page with query parameters
+        const params = new URLSearchParams();
+        if (location) params.set('destination', location);
+        if (startDate) params.set('startDate', startDate.toLocaleDateString());
+        if (endDate) params.set('endDate', endDate.toLocaleDateString());
+        navigate(`/search?${params.toString()}`);
+    };
 
     return (
         <section className="relative w-full overflow-hidden mb-20">
@@ -53,12 +65,13 @@ const Hero = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                    {/* Location Input */}
                     <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4">
                         <label className="block text-sm font-bold text-gray-800 mb-1">Where?</label>
                         <input
                             type="text"
                             placeholder="Pick-up location"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
                             className="w-full outline-none text-gray-600 placeholder-gray-400"
                         />
                     </div>
@@ -81,7 +94,10 @@ const Hero = () => {
 
                     {/* Search Button */}
                     <div className="p-2 md:p-3">
-                        <button className="w-full md:w-auto h-full bg-primary hover:bg-primary-dark text-white font-bold px-8 py-3 md:py-0 rounded-md transition-colors text-lg">
+                        <button
+                            onClick={handleSearch}
+                            className="w-full md:w-auto h-full bg-primary hover:bg-primary-dark text-white font-bold px-8 py-3 md:py-0 rounded-md transition-colors text-lg"
+                        >
                             Search
                         </button>
                     </div>

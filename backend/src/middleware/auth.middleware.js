@@ -7,14 +7,25 @@ dotenv.config({ path: '../.env' });
 export const protect = async (req, res, next) => {
   let token;
 
+  // Check for token in Authorization header (Bearer token)
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
+    token = req.headers.authorization.split(' ')[1];
+  }
+  // Check for token in cookies
+  else if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
 
+  // Allow token in body for API flexibility (less secure, but useful for some cases)
+  else if (req.body && req.body.token) {
+    token = req.body.token;
+  }
+
+  if (token) {
+    try {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -28,12 +39,10 @@ export const protect = async (req, res, next) => {
       next();
     } catch (error) {
       console.error('Auth middleware error:', error);
-      return res.status(401).json({ message: 'Not authorized' });
+      return res.status(401).json({ message: 'Not authorized, token invalid' });
     }
-  }
-
-  if (!token) {
-    return res.status(401).json({ message: 'Not authorized, no token' });
+  } else {
+    return res.status(401).json({ message: 'Not authorized, no token provided' });
   }
 };
 
