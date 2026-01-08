@@ -24,55 +24,34 @@ const Hero = () => {
     } = useLocationAutocomplete();
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
-    const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
-    const locationWrapperRef = useRef(null);
 
-    const popularLocations = [
-        { city: 'Brighton', country: 'England, United Kingdom' },
-        { city: 'Cardiff', country: 'Wales, United Kingdom' },
-        { city: 'London', country: 'England, United Kingdom' },
-        { city: 'Leeds', country: 'England, United Kingdom' },
-        { city: 'Liverpool', country: 'England, United Kingdom' },
-        { city: 'Manchester', country: 'England, United Kingdom' },
-        { city: 'Glasgow', country: 'Scotland, United Kingdom' },
-        { city: 'Edinburgh', country: 'Scotland, United Kingdom' },
-        { city: 'Bristol', country: 'England, United Kingdom' },
-        { city: 'Birmingham', country: 'England, United Kingdom' },
-    ];
 
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target)) {
-                setShowLocationSuggestions(false);
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    const handleLocationSelect = (loc) => {
-        setLocation(loc);
-        setShowLocationSuggestions(false);
-    };
 
     const handleCurrentLocation = () => {
         setIsLocating(true);
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    // In a real app, you'd verify this with a reverse geocoding API
-                    setLocation("Current Location");
-                    setShowLocationSuggestions(false);
+                    const currentLocation = {
+                        city: "Current Location",
+                        country: "Nearby",
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                    selectLocation(currentLocation);
                     setIsLocating(false);
                 },
                 (error) => {
                     console.error("Error getting location:", error);
-                    // Fallback for demo purposes if permission denied
-                    setLocation("Current Location");
-                    setShowLocationSuggestions(false);
+                    // Fallback using mock location or just text
+                    const fallbackLocation = {
+                        city: "Current Location",
+                        country: "Nearby",
+                        latitude: 51.5074, // Default to London or similar or null
+                        longitude: -0.1278
+                    };
+                    selectLocation(fallbackLocation);
                     setIsLocating(false);
                 }
             );
@@ -148,10 +127,65 @@ const Hero = () => {
                         <input
                             type="text"
                             placeholder="Pick-up location"
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onFocus={handleInputFocus}
+                            onBlur={handleInputBlur}
                             className="w-full outline-none text-gray-600 placeholder-gray-400"
                         />
+
+                        {/* Location Suggestions Dropdown */}
+                        {showDropdown && (
+                            <div className="absolute top-full left-0 w-[400px] bg-white rounded-lg shadow-xl border border-gray-100 z-50 mt-2 p-4 flex gap-4 max-h-[400px] overflow-y-auto">
+                                {/* Popular/Suggested Searches */}
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-bold text-gray-900 mb-3">
+                                        {query.length < 2 ? "Popular searches" : "Suggestions"}
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {suggestions.length > 0 ? (
+                                            suggestions.map((loc, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-start gap-3 cursor-pointer group hover:bg-gray-50 p-2 rounded-md transition-colors"
+                                                    onMouseDown={() => selectLocation(loc)}
+                                                >
+                                                    <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-gray-200 transition-colors">
+                                                        <MapPin className="w-5 h-5 text-gray-400" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-gray-800 text-sm">{loc.city}</p>
+                                                        <p className="text-xs text-gray-500">{loc.country}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-500 text-sm">No locations found</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Nearby Column - Always visible */}
+                                <div className="flex-1 border-l border-gray-100 pl-4">
+                                    <h3 className="text-sm font-bold text-gray-900 mb-3">Nearby</h3>
+                                    <div
+                                        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+                                        onMouseDown={handleCurrentLocation}
+                                    >
+                                        <div className="bg-gray-100 p-2 rounded-lg">
+                                            {isLocating ? (
+                                                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                                <Navigation className="w-5 h-5 text-primary rotate-45" fill="currentColor" />
+                                            )}
+                                        </div>
+                                        <span className="text-primary font-medium text-sm">
+                                            {isLocating ? "Locating..." : "Search around me"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Date Input */}
