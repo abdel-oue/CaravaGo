@@ -117,7 +117,7 @@ const Destinations = () => {
                 </div>
 
                 <div className="text-center">
-                    <a href="#rent" className="inline-block bg-primary text-white px-10 py-4 rounded-full hover:bg-primary-dark transition-all font-bold text-lg">
+                    <a href="/search" className="inline-block bg-primary text-white px-10 py-4 rounded-full hover:bg-primary-dark transition-all font-bold text-lg">
                         Rent an RV
                         <svg className="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

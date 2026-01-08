@@ -110,19 +110,24 @@ const Search = () => {
     const [searchParams] = useSearchParams();
     const [showMap, setShowMap] = useState(true);
     const [priceRange, setPriceRange] = useState({ min: null, max: 500 });
+
+    // Get search parameters
+    const destination = searchParams.get('destination') || 'Marrakech, Morocco';
+    const startDate = searchParams.get('startDate') || 'Feb 1, 2026';
+    const endDate = searchParams.get('endDate') || 'Feb 19, 2026';
+
+    // Parse vehicleTypes from URL
+    const vehicleTypesParam = searchParams.get('vehicleTypes');
+    const initialVehicleTypes = vehicleTypesParam ? [vehicleTypesParam] : null;
+
     const [filters, setFilters] = useState({
         travellers: null,
-        vehicleTypes: null,
+        vehicleTypes: initialVehicleTypes,
         equipment: null,
         preferences: null,
         discounts: null,
         animalsAllowed: false
     });
-
-    // Get search parameters
-    const destination = searchParams.get('destination') || 'Brighton, England, United Kingdom';
-    const startDate = searchParams.get('startDate') || 'Feb 1, 2026';
-    const endDate = searchParams.get('endDate') || 'Feb 19, 2026';
 
     // Filter vehicles based on all filters
     const filteredVehicles = mockVehicles.filter(vehicle => {
