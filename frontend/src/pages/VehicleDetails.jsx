@@ -3,6 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import SearchNavbar from '../components/search/SearchNavbar';
 import { FaStar, FaBed, FaChair, FaCheckCircle, FaSnowflake, FaWifi, FaShower, FaUtensils, FaCar, FaChevronRight, FaHeart, FaShare } from 'react-icons/fa';
 import { FaShieldHalved, FaIdCard } from 'react-icons/fa6';
+import vanMain from '../public/vanmain1.jpg';
+import van2 from '../public/van2.jpg';
+import van3 from '../public/van3.jpg';
+import van4 from '../public/van4.jpg';
+import van5 from '../public/van5.jpg';
 
 const VehicleDetails = () => {
     const { id } = useParams();
@@ -18,11 +23,11 @@ const VehicleDetails = () => {
         discount: 83.00,
         cleaningFee: 45.00,
         images: [
-            "https://images.unsplash.com/photo-1626202378875-9c8446f23af9?q=80&w=2070&auto=format&fit=crop", // Main generic camper
-            "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?q=80&w=2070&auto=format&fit=crop", // Interior
-            "https://images.unsplash.com/photo-1510312305653-8ed496efae75?q=80&w=2070&auto=format&fit=crop", // Camping
-            "https://images.unsplash.com/photo-1533561917562-b9e762c2f211?q=80&w=2070&auto=format&fit=crop", // Detail
-            "https://images.unsplash.com/photo-1519003300449-424adfa3747d?q=80&w=2070&auto=format&fit=crop"  // Detail
+            vanMain,
+            van2,
+            van3,
+            van4,
+            van5
         ],
         owner: {
             name: "Matt",

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaSearch, FaChevronDown, FaUser, FaBars, FaQuestionCircle, FaGlobe, FaCarSide, FaRoute, FaLifeRing, FaSignInAlt, FaUserPlus, FaPlusCircle, FaMobileAlt } from 'react-icons/fa';
-import logo from '../../public/logo.png';
+import logo from '/src/public/logo.png';
 
 const SearchNavbar = ({ destination, startDate, endDate, onSearchChange }) => {
     const { user, logout } = useAuth();
@@ -71,7 +71,7 @@ const SearchNavbar = ({ destination, startDate, endDate, onSearchChange }) => {
                         <img
                             src={logo}
                             alt="CaravaGo"
-                            className="h-32 w-auto"
+                            className="h-32 w-auto object-contain border-none"
                         />
                     </Link>
 

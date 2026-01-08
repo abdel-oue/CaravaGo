@@ -26,8 +26,8 @@ const Navbar = () => {
     return (
         <header
             className={`fixed w-full top-0 z-50 transition-all duration-500 ease-in-out ${scrolled
-                    ? 'bg-white shadow-md py-2'
-                    : 'bg-transparent py-4'
+                ? 'bg-white shadow-md py-2'
+                : 'bg-transparent py-4'
                 }`}
         >
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,7 +38,7 @@ const Navbar = () => {
                             <img
                                 src={logo}
                                 alt="CaravaGo"
-                                className={`h-24 w-auto transition-transform duration-300 group-hover:scale-105 ${!scrolled && 'brightness-0 invert'}`}
+                                className={`h-32 w-auto transition-transform duration-300 group-hover:scale-105 ${!scrolled && 'brightness-0 invert'}`}
                             />
                         </Link>
                     </div>
@@ -70,8 +70,8 @@ const Navbar = () => {
                                 <button
                                     onClick={logout}
                                     className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${scrolled
-                                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                            : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
+                                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
                                         }`}
                                 >
                                     Logout
@@ -89,8 +89,8 @@ const Navbar = () => {
                                 <Link
                                     to="/signup"
                                     className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-md hover:-translate-y-0.5 ${scrolled
-                                            ? 'bg-primary text-white hover:bg-primary-dark'
-                                            : 'bg-white text-main hover:bg-gray-100'
+                                        ? 'bg-primary text-white hover:bg-primary-dark'
+                                        : 'bg-white text-main hover:bg-gray-100'
                                         }`}
                                 >
                                     Sign up
