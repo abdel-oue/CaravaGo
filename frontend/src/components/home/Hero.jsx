@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { MapPin, Navigation } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FaMapMarkerAlt } from 'react-icons/fa';
@@ -23,6 +24,43 @@ const Hero = () => {
     } = useLocationAutocomplete();
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
+    const [isLocating, setIsLocating] = useState(false);
+
+
+
+    const handleCurrentLocation = () => {
+        setIsLocating(true);
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const currentLocation = {
+                        city: "Current Location",
+                        country: "Nearby",
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                    selectLocation(currentLocation);
+                    setIsLocating(false);
+                },
+                (error) => {
+                    console.error("Error getting location:", error);
+                    // Fallback using mock location or just text
+                    const fallbackLocation = {
+                        city: "Current Location",
+                        country: "Nearby",
+                        latitude: 51.5074, // Default to London or similar or null
+                        longitude: -0.1278
+                    };
+                    selectLocation(fallbackLocation);
+                    setIsLocating(false);
+                }
+            );
+        } else {
+            console.log("Geolocation is not supported by your browser.");
+            setIsLocating(false);
+        }
+    };
+
 
     const handleSearch = () => {
         // Navigate to search page with query parameters
@@ -40,7 +78,7 @@ const Hero = () => {
     };
 
     return (
-        <section className="relative w-full overflow-hidden mb-20">
+        <section className="relative w-full mb-20">
             <div className="flex flex-col lg:flex-row min-h-[600px] lg:h-[600px]">
                 {/* Left Side: Solid Teal */}
                 <div className="w-full lg:w-1/2 bg-main text-white relative flex flex-col justify-center px-4 sm:px-12 lg:px-24 py-16 lg:py-0">
@@ -77,59 +115,75 @@ const Hero = () => {
             </div>
 
             {/* Floating Search Bar */}
-            <div className="absolute top-[85%] lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[150px] w-full px-4sm:px-6 lg:px-0 z-30 pointer-events-none">
+            <div className="absolute top-[85%] lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[150px] w-full px-4 sm:px-6 lg:px-0 z-20 pointer-events-none">
                 <motion.div
                     className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto pointer-events-auto flex flex-col md:flex-row border border-gray-100"
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4 relative">
+                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4">
                         <label className="block text-sm font-bold text-gray-800 mb-1">Where?</label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Choose Moroccan city"
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                                onFocus={handleInputFocus}
-                                onBlur={handleInputBlur}
-                                className="w-full outline-none text-gray-600 placeholder-gray-400"
-                            />
-                            {locationLoading && (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
-                                </div>
-                            )}
-                        </div>
+                        <input
+                            type="text"
+                            placeholder="Pick-up location"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onFocus={handleInputFocus}
+                            onBlur={handleInputBlur}
+                            className="w-full outline-none text-gray-600 placeholder-gray-400"
+                        />
 
-                        {/* Autocomplete Dropdown */}
-                        {showDropdown && suggestions.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-lg shadow-lg z-[160] max-h-60 overflow-y-auto mt-1">
-                                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
-                                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                        {query ? 'Search Results' : 'Popular Locations'}
+                        {/* Location Suggestions Dropdown */}
+                        {showDropdown && (
+                            <div className="absolute top-full left-0 w-[400px] bg-white rounded-lg shadow-xl border border-gray-100 z-50 mt-2 p-4 flex gap-4 max-h-[400px] overflow-y-auto">
+                                {/* Popular/Suggested Searches */}
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-bold text-gray-900 mb-3">
+                                        {query.length < 2 ? "Popular searches" : "Suggestions"}
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {suggestions.length > 0 ? (
+                                            suggestions.map((loc, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-start gap-3 cursor-pointer group hover:bg-gray-50 p-2 rounded-md transition-colors"
+                                                    onMouseDown={() => selectLocation(loc)}
+                                                >
+                                                    <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-gray-200 transition-colors">
+                                                        <MapPin className="w-5 h-5 text-gray-400" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-gray-800 text-sm">{loc.city}</p>
+                                                        <p className="text-xs text-gray-500">{loc.country}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-500 text-sm">No locations found</p>
+                                        )}
                                     </div>
                                 </div>
-                                {suggestions.map((location) => (
+
+                                {/* Nearby Column - Always visible */}
+                                <div className="flex-1 border-l border-gray-100 pl-4">
+                                    <h3 className="text-sm font-bold text-gray-900 mb-3">Nearby</h3>
                                     <div
-                                        key={`${location.city}-${location.country}`}
-                                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                        onClick={() => selectLocation(location)}
+                                        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+                                        onMouseDown={handleCurrentLocation}
                                     >
-                                        <div className="flex items-center space-x-2">
-                                            <FaMapMarkerAlt className="text-gray-400 text-sm" />
-                                            <div>
-                                                <div className="font-medium text-gray-900">
-                                                    {location.city}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {location.region && `${location.region}, `}{location.country}
-                                                </div>
-                                            </div>
+                                        <div className="bg-gray-100 p-2 rounded-lg">
+                                            {isLocating ? (
+                                                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                                <Navigation className="w-5 h-5 text-primary rotate-45" fill="currentColor" />
+                                            )}
                                         </div>
+                                        <span className="text-primary font-medium text-sm">
+                                            {isLocating ? "Locating..." : "Search around me"}
+                                        </span>
                                     </div>
-                                ))}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -140,11 +194,15 @@ const Hero = () => {
                         <div className="flex gap-2">
                             <DatePicker
                                 selected={startDate}
-                                onChange={(date) => setStartDate(date)}
-                                selectsStart
+                                onChange={(dates) => {
+                                    const [start, end] = dates;
+                                    setStartDate(start);
+                                    setEndDate(end);
+                                }}
+                                selectsRange
                                 startDate={startDate}
                                 endDate={endDate}
-                                placeholderText="Departure/Return"
+                                placeholderText="Departure - Return"
                                 className="w-full outline-none text-gray-600 placeholder-gray-400"
                             />
                         </div>
