@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { MapPin, Navigation } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
@@ -10,6 +11,64 @@ const Hero = () => {
     const [location, setLocation] = useState('');
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
+    const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+    const [isLocating, setIsLocating] = useState(false);
+    const locationWrapperRef = useRef(null);
+
+    const popularLocations = [
+        { city: 'Brighton', country: 'England, United Kingdom' },
+        { city: 'Cardiff', country: 'Wales, United Kingdom' },
+        { city: 'London', country: 'England, United Kingdom' },
+        { city: 'Leeds', country: 'England, United Kingdom' },
+        { city: 'Liverpool', country: 'England, United Kingdom' },
+        { city: 'Manchester', country: 'England, United Kingdom' },
+        { city: 'Glasgow', country: 'Scotland, United Kingdom' },
+        { city: 'Edinburgh', country: 'Scotland, United Kingdom' },
+        { city: 'Bristol', country: 'England, United Kingdom' },
+        { city: 'Birmingham', country: 'England, United Kingdom' },
+    ];
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target)) {
+                setShowLocationSuggestions(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const handleLocationSelect = (loc) => {
+        setLocation(loc);
+        setShowLocationSuggestions(false);
+    };
+
+    const handleCurrentLocation = () => {
+        setIsLocating(true);
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // In a real app, you'd verify this with a reverse geocoding API
+                    setLocation("Current Location");
+                    setShowLocationSuggestions(false);
+                    setIsLocating(false);
+                },
+                (error) => {
+                    console.error("Error getting location:", error);
+                    // Fallback for demo purposes if permission denied
+                    setLocation("Current Location");
+                    setShowLocationSuggestions(false);
+                    setIsLocating(false);
+                }
+            );
+        } else {
+            console.log("Geolocation is not supported by your browser.");
+            setIsLocating(false);
+        }
+    };
+
 
     const handleSearch = () => {
         // Navigate to search page with query parameters
@@ -21,7 +80,7 @@ const Hero = () => {
     };
 
     return (
-        <section className="relative w-full overflow-hidden mb-20">
+        <section className="relative w-full mb-20">
             <div className="flex flex-col lg:flex-row min-h-[600px] lg:h-[600px]">
                 {/* Left Side: Solid Teal */}
                 <div className="w-full lg:w-1/2 bg-main text-white relative flex flex-col justify-center px-4 sm:px-12 lg:px-24 py-16 lg:py-0">
@@ -58,22 +117,70 @@ const Hero = () => {
             </div>
 
             {/* Floating Search Bar */}
-            <div className="absolute top-[85%] lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[150px] w-full px-4 sm:px-6 lg:px-0 z-20 pointer-events-none">
+            <div className="absolute top-[85%] lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[150px] w-full px-4 sm:px-6 lg:px-0 z-40 pointer-events-none">
                 <motion.div
-                    className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto pointer-events-auto flex flex-col md:flex-row overflow-hidden border border-gray-100"
+                    className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto pointer-events-auto flex flex-col md:flex-row border border-gray-100"
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4">
-                        <label className="block text-sm font-bold text-gray-800 mb-1">Where?</label>
+                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4 relative" ref={locationWrapperRef}>
+                        <label className="block text-sm font-bold text-gray-800 mb-1">Where are you leaving from?</label>
                         <input
                             type="text"
                             placeholder="Pick-up location"
                             value={location}
                             onChange={(e) => setLocation(e.target.value)}
+                            onFocus={() => setShowLocationSuggestions(true)}
                             className="w-full outline-none text-gray-600 placeholder-gray-400"
                         />
+
+                        {/* Location Suggestions Dropdown */}
+                        {showLocationSuggestions && (
+                            <div className="absolute top-full left-0 w-[400px] bg-white rounded-lg shadow-xl border border-gray-100 z-50 mt-2 p-4 flex gap-4 max-h-[400px] overflow-y-auto">
+                                {/* Popular Searches Column */}
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-bold text-gray-900 mb-3">Popular searches</h3>
+                                    <div className="space-y-3">
+                                        {popularLocations.map((loc, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-start gap-3 cursor-pointer group hover:bg-gray-50 p-2 rounded-md transition-colors"
+                                                onClick={() => handleLocationSelect(loc.city)}
+                                            >
+                                                <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-gray-200 transition-colors">
+                                                    <MapPin className="w-5 h-5 text-gray-400" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-gray-800 text-sm">{loc.city}</p>
+                                                    <p className="text-xs text-gray-500">{loc.country}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Nearby Column */}
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-bold text-gray-900 mb-3">Nearby</h3>
+                                    <div
+                                        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+                                        onClick={handleCurrentLocation}
+                                    >
+                                        <div className="bg-gray-100 p-2 rounded-lg">
+                                            {isLocating ? (
+                                                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                                <Navigation className="w-5 h-5 text-primary rotate-45" fill="currentColor" />
+                                            )}
+                                        </div>
+                                        <span className="text-primary font-medium text-sm">
+                                            {isLocating ? "Locating..." : "Search around me"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Date Input */}
@@ -82,11 +189,15 @@ const Hero = () => {
                         <div className="flex gap-2">
                             <DatePicker
                                 selected={startDate}
-                                onChange={(date) => setStartDate(date)}
-                                selectsStart
+                                onChange={(dates) => {
+                                    const [start, end] = dates;
+                                    setStartDate(start);
+                                    setEndDate(end);
+                                }}
+                                selectsRange
                                 startDate={startDate}
                                 endDate={endDate}
-                                placeholderText="Departure/Return"
+                                placeholderText="Departure - Return"
                                 className="w-full outline-none text-gray-600 placeholder-gray-400"
                             />
                         </div>
