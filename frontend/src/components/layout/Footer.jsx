@@ -8,7 +8,7 @@ const Footer = () => {
                     <div className="space-y-4">
                         <h3 className="text-white text-2xl font-bold font-lexend">CaravaGo</h3>
                         <p className="text-sm text-white/70 leading-relaxed">
-                            CaravaGo connects holidaymakers with local campervan and motorhome owners across Europe through its secure platform. Hire the motorhome of your dreams, at home or abroad, with comprehensive insurance and support included. Connect, share and escape with CaravaGo!
+                            CaravaGo connects Moroccan travelers with local campervan and motorhome owners across Morocco through its secure platform. Discover Morocco's beauty from Marrakech to Chefchaouen, with comprehensive insurance and 24/7 support included. Connect, share and explore Morocco with CaravaGo!
                         </p>
                     </div>
                     <div>

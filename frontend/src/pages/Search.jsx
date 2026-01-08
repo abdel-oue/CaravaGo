@@ -5,6 +5,15 @@ import SearchFilters from '../components/search/SearchFilters';
 import VehicleList from '../components/search/VehicleList';
 import Map from '../components/search/Map';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import vanImage from '../public/vanmain1.jpg';
+import vanImage2 from '../public/vanmain2.jpg';
+import vanImage3 from '../public/vanmain3.jpg';
+import vanImage4 from '../public/vanmain4.jpg';
+import vanImage5 from '../public/vanmain5.jpg';
+import vanImage6 from '../public/vanmain6.jpg';
+import vanImage7 from '../public/vanmain7.jpg';
+import vanImage8 from '../public/vanmain8.jpg';
+
 
 // Mock data for demonstration
 const mockVehicles = [
@@ -17,8 +26,8 @@ const mockVehicles = [
         totalPrice: 1951,
         rating: 5.0,
         coordinates: [50.8350, -0.2730],
-        image: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        badge: 'Book on Goboony'
+        image: vanImage,
+        badge: 'Book on CaravaGo'
     },
     {
         id: 2,
@@ -29,8 +38,8 @@ const mockVehicles = [
         totalPrice: 1966,
         rating: 5.0,
         coordinates: [50.8225, -0.1372],
-        image: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        badge: 'Book on Goboony'
+        image: vanImage2,
+        badge: 'Book on CaravaGo'
     },
     {
         id: 3,
@@ -41,8 +50,8 @@ const mockVehicles = [
         totalPrice: 1349,
         rating: 5.0,
         coordinates: [50.8279, -0.1716],
-        image: 'https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        badge: 'Book on Goboony'
+        image: vanImage3,
+        badge: 'Book on CaravaGo'
     },
     {
         id: 4,
@@ -53,8 +62,8 @@ const mockVehicles = [
         totalPrice: 1702,
         rating: 5.0,
         coordinates: [50.9167, -0.4500],
-        image: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        badge: 'Book on Goboony'
+        image: vanImage4,
+        badge: 'Book on CaravaGo'
     },
     {
         id: 5,
@@ -65,8 +74,8 @@ const mockVehicles = [
         totalPrice: 1843,
         rating: 5.0,
         coordinates: [50.8400, -0.0800],
-        image: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        badge: 'Book on Goboony'
+        image: vanImage5,
+        badge: 'Book on CaravaGo'
     },
     {
         id: 6,
@@ -77,8 +86,8 @@ const mockVehicles = [
         totalPrice: 1568,
         rating: 5.0,
         coordinates: [50.9000, -0.2000],
-        image: 'https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        badge: 'Book on Goboony'
+        image: vanImage6,
+        badge: 'Book on CaravaGo'
     },
     {
         id: 7,
@@ -89,8 +98,8 @@ const mockVehicles = [
         totalPrice: 2184,
         rating: 4.8,
         coordinates: [50.8320, -0.2700],
-        image: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        badge: 'Book on Goboony'
+        image: vanImage7,
+        badge: 'Book on CaravaGo'
     },
     {
         id: 8,
@@ -101,8 +110,8 @@ const mockVehicles = [
         totalPrice: 2930,
         rating: 5.0,
         coordinates: [50.9500, -0.3500],
-        image: 'https://images.unsplash.com/photo-1527786356703-4b100091cd2c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        badge: 'Book on Goboony'
+        image: vanImage8,
+        badge: 'Book on CaravaGo'
     },
 ];
 
@@ -110,19 +119,24 @@ const Search = () => {
     const [searchParams] = useSearchParams();
     const [showMap, setShowMap] = useState(true);
     const [priceRange, setPriceRange] = useState({ min: null, max: 500 });
+
+    // Get search parameters
+    const destination = searchParams.get('destination') || 'Marrakech, Morocco';
+    const startDate = searchParams.get('startDate') || 'Feb 1, 2026';
+    const endDate = searchParams.get('endDate') || 'Feb 19, 2026';
+
+    // Parse vehicleTypes from URL
+    const vehicleTypesParam = searchParams.get('vehicleTypes');
+    const initialVehicleTypes = vehicleTypesParam ? [vehicleTypesParam] : null;
+
     const [filters, setFilters] = useState({
         travellers: null,
-        vehicleTypes: null,
+        vehicleTypes: initialVehicleTypes,
         equipment: null,
         preferences: null,
         discounts: null,
         animalsAllowed: false
     });
-
-    // Get search parameters
-    const destination = searchParams.get('destination') || 'Brighton, England, United Kingdom';
-    const startDate = searchParams.get('startDate') || 'Feb 1, 2026';
-    const endDate = searchParams.get('endDate') || 'Feb 19, 2026';
 
     // Filter vehicles based on all filters
     const filteredVehicles = mockVehicles.filter(vehicle => {
@@ -162,15 +176,15 @@ const Search = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Search Navbar */}
-            <SearchNavbar 
+            <SearchNavbar
                 destination={destination}
                 startDate={startDate}
                 endDate={endDate}
             />
 
             {/* Search Filters */}
-            <SearchFilters 
-                showMap={showMap} 
+            <SearchFilters
+                showMap={showMap}
                 setShowMap={setShowMap}
                 priceRange={priceRange}
                 setPriceRange={setPriceRange}
