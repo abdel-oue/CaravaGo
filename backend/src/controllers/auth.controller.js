@@ -4,8 +4,8 @@ import { authLogger } from '../utils/logger.js';
 import { sendEmailVerificationEmail } from '../utils/email.js';
 
 import dotenv from 'dotenv';
-
 dotenv.config({ path: '../.env' });
+
 // Generate JWT Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -184,22 +184,6 @@ export const login = async (req, res) => {
   }
 };
 
-// @desc    Logout user / clear cookie
-// @route   POST /api/auth/logout
-// @access  Public
-export const logout = async (req, res) => {
-  try {
-    authLogger.info('User logout initiated', { userId: req.user?.id });
-
-    authLogger.success('User logout successful', { userId: req.user?.id });
-
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    authLogger.error('Logout process failed with exception', { userId: req.user?.id }, error);
-    res.status(500).json({ message: 'Server error occurred during logout' });
-  }
-};
-
 // @desc    Forgot password - send reset email
 // @route   POST /api/auth/forgot-password
 // @access  Public
@@ -279,81 +263,6 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     authLogger.error('Password reset process failed with exception', null, error);
     res.status(400).json({ message: error.message || 'Server error occurred during password reset' });
-  }
-};
-
-// @desc    Update user profile
-// @route   PUT /api/auth/profile
-// @access  Private
-export const updateProfile = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { firstName, lastName, phone, address, bio } = req.body;
-
-    authLogger.info('Profile update attempt started', { userId });
-
-    // Validation - ensure at least one field is provided
-    if (!firstName && !lastName && !phone && !address && !bio) {
-      authLogger.warning('Profile update validation failed: no fields provided', { userId });
-      return res.status(400).json({ message: 'Please provide at least one field to update' });
-    }
-
-    // Validate phone format if provided
-    if (phone && phone.trim()) {
-      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-      if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
-        authLogger.warning('Profile update validation failed: invalid phone format', { userId, phone });
-        return res.status(400).json({ message: 'Please provide a valid phone number' });
-      }
-    }
-
-    // Validate name lengths if provided
-    if (firstName && firstName.length > 50) {
-      return res.status(400).json({ message: 'First name must be less than 50 characters' });
-    }
-    if (lastName && lastName.length > 50) {
-      return res.status(400).json({ message: 'Last name must be less than 50 characters' });
-    }
-
-    // Validate bio length if provided
-    if (bio && bio.length > 500) {
-      return res.status(400).json({ message: 'Bio must be less than 500 characters' });
-    }
-
-    // Update profile
-    const updatedUser = await UserService.updateProfile(userId, {
-      firstName: firstName?.trim(),
-      lastName: lastName?.trim(),
-      phone: phone?.trim(),
-      address: address?.trim(),
-      bio: bio?.trim()
-    });
-
-    authLogger.success('Profile update successful', {
-      userId: updatedUser.id,
-      email: updatedUser.email,
-      updatedFields: Object.keys(req.body)
-    });
-
-    res.json({
-      message: 'Profile updated successfully',
-      user: {
-        id: updatedUser.id,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-        address: updatedUser.address,
-        bio: updatedUser.bio,
-        avatar_url: updatedUser.avatar_url,
-        is_verified: updatedUser.is_verified,
-        is_owner: updatedUser.is_owner
-      }
-    });
-  } catch (error) {
-    authLogger.error('Profile update failed with exception', { userId: req.user?.id }, error);
-    res.status(500).json({ message: 'Server error occurred while updating profile' });
   }
 };
 
