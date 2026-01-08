@@ -119,7 +119,18 @@ class UserService {
   // Create a new user
   static async createUser(userData) {
     try {
-      const { name, email, password } = userData;
+      const {
+        name,
+        email,
+        password,
+        avatar_url,
+        phone,
+        bio,
+        is_verified = false,
+        is_owner = false
+      } = userData;
+
+      dbLogger.info('Creating new user', { email, name });
 
       // Create new user (password will be hashed by pre-save middleware)
       const user = new User({
@@ -237,6 +248,7 @@ class UserService {
 
       return userWithoutPassword;
     } catch (error) {
+      dbLogger.error('User creation failed', { email: userData?.email }, error);
       throw error;
     }
   }
@@ -246,6 +258,7 @@ class UserService {
     try {
       return await User.findByEmail(email);
     } catch (error) {
+      dbLogger.error('Failed to find user by email', { email }, error);
       throw error;
     }
   }
@@ -264,6 +277,7 @@ class UserService {
     try {
       return await User.findById(id);
     } catch (error) {
+      dbLogger.error('Password update failed', { user_id: id }, error);
       throw error;
     }
   }
