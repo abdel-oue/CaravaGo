@@ -1,3 +1,11 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import connectDB from './config/db.js';
+import authRoutes from './routes/auth.routes.js';
+import externalRoutes from './routes/external.routes.js';
+import listingRoutes from './routes/listing.routes.js';
+
 dotenv.config({ path: '../.env' });
 
 const app = express();
@@ -34,6 +42,7 @@ app.use(express.urlencoded({ extended: false }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/external', externalRoutes);
+app.use('/api/listings', listingRoutes);
 
 const PORT = process.env.PORT || 4000;
 
