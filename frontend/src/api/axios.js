@@ -32,7 +32,7 @@ api.interceptors.response.use(
       window.location.pathname !== '/signin'
     ) {
       localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem('userId');
       window.location.href = '/signin';
     }
     return Promise.reject(error);

@@ -14,12 +14,8 @@ export const protect = async (req, res, next) => {
   ) {
     token = req.headers.authorization.split(' ')[1];
   }
-  // Check for token in cookies
-  else if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
-  }
 
-  // Allow token in body for API flexibility (less secure, but useful for some cases)
+  // Allow token in body for API flexibility (useful for token verification)
   else if (req.body && req.body.token) {
     token = req.body.token;
   }

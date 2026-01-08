@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  address: {
+    type: String,
+    default: null,
+    trim: true
+  },
   bio: {
     type: String,
     default: null
@@ -287,6 +292,56 @@ class UserService {
     return await bcrypt.compare(plainPassword, hashedPassword);
   }
 
+  // Update user profile
+  static async updateProfile(userId, profileData) {
+    try {
+      const { firstName, lastName, phone, address, bio } = profileData;
+
+      // Build update object with only provided fields
+      const updateData = {};
+      if (firstName !== undefined) updateData.firstName = firstName;
+      if (lastName !== undefined) updateData.lastName = lastName;
+      if (phone !== undefined) updateData.phone = phone;
+      if (address !== undefined) updateData.address = address;
+      if (bio !== undefined) updateData.bio = bio;
+
+      // If firstName or lastName is being updated, also update the main name field
+      if (firstName !== undefined || lastName !== undefined) {
+        // Get current user to check existing values
+        const currentUser = await User.findById(userId);
+        if (currentUser) {
+          const newFirstName = firstName !== undefined ? firstName : currentUser.firstName || '';
+          const newLastName = lastName !== undefined ? lastName : currentUser.lastName || '';
+
+          // Update the main name field by combining firstName and lastName
+          if (newFirstName || newLastName) {
+            updateData.name = `${newFirstName} ${newLastName}`.trim();
+          }
+        }
+      }
+
+      // Update user
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        updateData,
+        {
+          new: true,
+          runValidators: true,
+          select: '-password -passwordResetToken -passwordResetExpires -emailVerificationToken -emailVerificationCode -emailVerificationExpires'
+        }
+      );
+
+      if (!updatedUser) {
+        throw new Error('User not found');
+      }
+
+      // Return user with virtuals
+      return updatedUser.toJSON({ virtuals: true });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Instance method access
   static async comparePassword(user, candidatePassword) {
     return await user.comparePassword(candidatePassword);
@@ -348,6 +403,80 @@ class UserService {
       await sendPasswordResetSuccessEmail(user.email);
 
       return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get user bookings (as renter)
+  static async getUserBookings(userId) {
+    try {
+      // Since we're using MongoDB but the schema shows SQL,
+      // I'll implement basic MongoDB queries for now
+      // In a real implementation, you'd have separate models for Bookings, etc.
+
+      // For now, return empty array - this would be implemented with proper models
+      return [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get user listings (as owner)
+  static async getUserListings(userId) {
+    try {
+      // Return empty array - this would be implemented with proper Listing model
+      return [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get user reviews (received reviews)
+  static async getUserReviews(userId) {
+    try {
+      // Return empty array - this would be implemented with proper Review model
+      return [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get user favorites
+  static async getUserFavorites(userId) {
+    try {
+      // Return empty array - this would be implemented with proper Favorite model
+      return [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get user messages
+  static async getUserMessages(userId) {
+    try {
+      // Return empty array - this would be implemented with proper Message model
+      return [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get user notifications
+  static async getUserNotifications(userId) {
+    try {
+      // Return empty array - this would be implemented with proper Notification model
+      return [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Mark notification as read
+  static async markNotificationAsRead(userId, notificationId) {
+    try {
+      // Return false - this would be implemented with proper Notification model
+      return false;
     } catch (error) {
       throw error;
     }

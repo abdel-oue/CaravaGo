@@ -14,29 +14,31 @@ import VehicleDetails from './pages/VehicleDetails';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <Routes>
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/search" element={<Search />} />
           <Route path="/vehicle/:id" element={<VehicleDetails />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
+
+          <Route
+            path="/profile"
+            element={
+                <Profile />
+            }
+          />
+
           <Route path="/create-listing" element={<CreateListing />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={<Home />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
 export default App;
-

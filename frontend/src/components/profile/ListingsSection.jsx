@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import DetailModal from './DetailModal';
 
-const ListingsSection = ({ mockListings }) => {
+const ListingsSection = ({ userListings, loading }) => {
   const [selectedListing, setSelectedListing] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -24,7 +24,14 @@ const ListingsSection = ({ mockListings }) => {
         </button>
       </div>
 
-      {mockListings.length === 0 ? (
+      {loading ? (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+            <span className="ml-2 text-gray-600">Loading listings...</span>
+          </div>
+        </div>
+      ) : userListings.length === 0 ? (
         <div className="bg-white rounded-xl shadow-lg p-6 text-center">
           <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +43,7 @@ const ListingsSection = ({ mockListings }) => {
         </div>
       ) : (
         <div className="space-y-3">
-          {mockListings.map((listing) => (
+          {userListings.map((listing) => (
             <div key={listing.id} className="bg-white rounded-xl shadow-lg p-4">
               <div className="flex justify-between items-start mb-3">
                 <div>
