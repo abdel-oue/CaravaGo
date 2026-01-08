@@ -5,13 +5,17 @@ import {
   getListingById,
   getMyListings,
   updateListing,
-  deleteListing
+  deleteListing,
+  getVehicleTypes,
+  getAmenities
 } from '../controllers/listing.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// Public routes
+// Public routes - must be before /:id route
+router.get('/vehicle-types', getVehicleTypes);
+router.get('/amenities', getAmenities);
 router.get('/', getAllListings);
 router.get('/:id', getListingById);
 
