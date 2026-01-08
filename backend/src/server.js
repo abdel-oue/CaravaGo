@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
-import externalRoutes from './routes/external.routes.js';
+import profileRoutes from './routes/profile.routes.js';
 import userRoutes from './routes/user.routes.js';
 
 dotenv.config({ path: '../.env' });
@@ -42,7 +42,7 @@ app.use(express.urlencoded({ extended: false }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
-app.use('/api/external', externalRoutes);
+app.use('/api/profile', profileRoutes);
 
 const PORT = process.env.PORT || 4000;
 
