@@ -19,6 +19,7 @@ import {
   useUserMessages,
   useUserNotifications
 } from '../hooks/useUserData';
+import authBackground from '../public/auth-background.jpg';
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -194,15 +195,29 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50/30 to-primary/5">
-      <main className="pt-20 pb-12">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background Image with Overlay */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${authBackground})` }}
+      >
+        {/* Gradient Overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/90 to-primary/20 backdrop-blur-[2px]"></div>
+      </div>
+
+      {/* Content */}
+      <main className="relative pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+          {/* Enhanced Header */}
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 font-lexend">
-              Welcome back, {user?.name?.split(' ')[0] || 'Traveler'}!
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-1.5 w-12 bg-gradient-to-r from-main via-primary to-secondary rounded-full"></div>
+              <span className="text-sm font-semibold text-main uppercase tracking-wider">Your Dashboard</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 font-lexend mb-2">
+              Marhaba, {user?.name?.split(' ')[0] || 'Traveler'}! 👋
             </h1>
-            <p className="text-gray-600 mt-2">Manage your account and explore</p>
+            <p className="text-gray-600 text-lg">Manage your CaravaGo journey across Morocco</p>
           </div>
 
           {/* Main Content Layout */}
