@@ -3,12 +3,12 @@ import { FaCheck } from 'react-icons/fa';
 
 const StepNavigation = ({ currentStep, steps }) => {
     return (
-        <div className="flex justify-center mb-8">
-            <div className="flex items-center space-x-4">
+        <div className="flex justify-center mb-6 md:mb-8">
+            <div className="flex items-center space-x-2 md:space-x-4 overflow-x-auto px-2">
                 {steps.map((step, index) => (
                     <div key={step.id} className="flex items-center">
                         <motion.div
-                            className={`flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all ${
+                            className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-2 transition-all ${
                                 currentStep >= step.id
                                     ? 'bg-primary border-primary text-white'
                                     : 'border-gray-300 text-gray-400'
@@ -31,7 +31,7 @@ const StepNavigation = ({ currentStep, steps }) => {
                             <div className="text-xs text-gray-500">{step.description}</div>
                         </div>
                         {index < steps.length - 1 && (
-                            <div className={`w-12 h-0.5 mx-4 ${
+                            <div className={`w-8 md:w-12 h-0.5 mx-2 md:mx-4 ${
                                 currentStep > step.id ? 'bg-primary' : 'bg-gray-300'
                             }`} />
                         )}

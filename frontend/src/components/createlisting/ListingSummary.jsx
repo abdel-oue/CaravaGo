@@ -18,8 +18,8 @@ const ListingSummary = ({ formData, selectedLocation }) => {
         return 'https://via.placeholder.com/150x150/cccccc/666666?text=No+Image';
     };
     return (
-        <div className="w-80 flex-shrink-0">
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
+        <div className="w-full lg:w-80 flex-shrink-0">
+            <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 sticky top-8">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Your Listing Summary</h3>
 
                 <div className="space-y-4">

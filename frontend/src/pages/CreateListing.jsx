@@ -223,9 +223,9 @@ const CreateListing = () => {
                 </div>
 
                 {/* Main Content Layout */}
-                <div className="flex gap-8">
-                    {/* Form Content - Left Side */}
-                    <div className="flex-1">
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Form Content - Main Content */}
+                    <div className="flex-1 order-1">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentStep}
@@ -233,7 +233,7 @@ const CreateListing = () => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
-                                className="bg-white rounded-xl shadow-lg p-8"
+                                className="bg-white rounded-xl shadow-lg p-4 md:p-8"
                             >
 
                                 {/* Form Content Based on Step */}
@@ -254,25 +254,25 @@ const CreateListing = () => {
                                 />
 
                                 {/* Navigation Buttons */}
-                                <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mt-8 pt-6 border-t border-gray-200">
                                     <button
                                         onClick={prevStep}
                                         disabled={currentStep === 1}
-                                        className="flex items-center gap-2 px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="flex items-center justify-center gap-2 px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full sm:w-auto order-2 sm:order-1"
                                     >
                                         <FaArrowLeft className="text-sm" />
                                         Previous
                                     </button>
 
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 order-1 sm:order-2">
+                                        <span className="text-sm text-gray-500 text-center sm:text-left">
                                             Step {currentStep} of {totalSteps}
                                         </span>
 
                                         {currentStep < totalSteps ? (
                                             <button
                                                 onClick={nextStep}
-                                                className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                                className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors w-full sm:w-auto"
                                             >
                                                 Next
                                                 <FaArrowRight className="text-sm" />
@@ -281,7 +281,7 @@ const CreateListing = () => {
                                             <button
                                                 onClick={handleCreateListing}
                                                 disabled={creating}
-                                                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                                             >
                                                 {creating ? (
                                                     <>
@@ -309,12 +309,14 @@ const CreateListing = () => {
                         </AnimatePresence>
                     </div>
 
-                    {/* Listing Summary - Right Sidebar */}
+                    {/* Listing Summary - Sidebar */}
                     {currentStep > 1 && (
-                        <ListingSummary
-                            formData={formData}
-                            selectedLocation={selectedLocation}
-                        />
+                        <div className="order-2 lg:order-2">
+                            <ListingSummary
+                                formData={formData}
+                                selectedLocation={selectedLocation}
+                            />
+                        </div>
                     )}
                 </div>
             </div>
