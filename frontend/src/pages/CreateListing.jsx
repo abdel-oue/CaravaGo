@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {FaArrowRight, FaArrowLeft, FaCar, FaCogs, FaDollarSign, FaCamera, FaRocket } from 'react-icons/fa';
+import {FaArrowRight, FaArrowLeft, FaCar, FaCogs, FaDollarSign, FaCamera, FaRocket, FaSpinner } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import { useAuth } from '../context/AuthContext';
 import { useLocationAutocomplete } from '../hooks/useLocations';
+import { Navigate } from 'react-router-dom';
+
+//import { createListing } from '../api/listings.js';
 import {
     HeroSection,
     StepNavigation,
     ListingSummary,
-    StepContent,
-    VerticalStepNavigation
+    StepContent
 } from '../components/createlisting';
 
 const CreateListing = () => {
+    const { user, loading } = useAuth();
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 5;
 
@@ -29,13 +35,15 @@ const CreateListing = () => {
         description: '',
         features: [],
         dailyRate: '',
-        currency: 'MAD',
+        currency: '€',
         photos: [],
         amenities: []
     });
 
     const [completedSteps, setCompletedSteps] = useState([]);
     const [errors, setErrors] = useState({});
+    const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState('');
 
     const steps = [
         { id: 1, title: 'What is it?', description: 'Basic vehicle information', icon: FaCar },
@@ -58,8 +66,23 @@ const CreateListing = () => {
         handleInputBlur
     } = useLocationAutocomplete();
 
+    if (loading) {
+        return (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+          </div>
+        );
+      }
+    
+      // Check if user exists, if not redirect to signin
+      if (!user) {
+        return <Navigate to="/signin" replace />;
+      }
+
+      
     // Update form data when location is selected
     useEffect(() => {
+        
         if (selectedLocation) {
             setFormData(prev => ({
                 ...prev,
@@ -90,7 +113,8 @@ const CreateListing = () => {
                 }
                 break;
             case 4:
-                if (formData.photos.length === 0) newErrors.photos = 'At least one photo is required';
+                const uploadedPhotos = formData.photos.filter(photo => photo.uploaded);
+                if (uploadedPhotos.length === 0) newErrors.photos = 'At least one photo must be uploaded successfully';
                 break;
         }
 
@@ -129,6 +153,47 @@ const CreateListing = () => {
                 ...prev,
                 [field]: ''
             }));
+        }
+    };
+
+    const handleCreateListing = async () => {
+        if (!validateStep(currentStep)) return;
+
+        setCreating(true);
+        setCreateError('');
+
+        try {
+            // Prepare listing data for API
+            const uploadedPhotos = formData.photos.filter(photo => photo.uploaded);
+            const listingData = {
+                title: formData.title,
+                description: formData.description,
+                vehicle_type_id: parseInt(formData.vehicleType),
+                make: formData.make,
+                model: formData.model,
+                year: parseInt(formData.year),
+                sleeps: formData.sleeps ? parseInt(formData.sleeps) : null,
+                length_meters: formData.length ? parseFloat(formData.length) : null,
+                location_city: formData.location?.city || '',
+                location_country: formData.location?.country || '',
+                latitude: formData.location?.lat || null,
+                longitude: formData.location?.lng || null,
+                daily_rate: parseFloat(formData.dailyRate),
+                currency: formData.currency,
+                photos: uploadedPhotos.map(photo => photo.path), // Send photo paths
+                amenity_ids: formData.amenities.map(a => parseInt(a))
+            };
+
+            //const result = await createListing(listingData);
+
+            // Navigate to the newly created listing or listings page
+            navigate(`/listing/${result.id}`); // Assuming the listing has an ID
+
+        } catch (error) {
+            console.error('Failed to create listing:', error);
+            setCreateError(error.message || 'Failed to create listing. Please try again.');
+        } finally {
+            setCreating(false);
         }
     };
 
@@ -201,13 +266,33 @@ const CreateListing = () => {
                                                 <FaArrowRight className="text-sm" />
                                             </button>
                                         ) : (
-                                            <button className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                                                <FaRocket className="text-sm" />
-                                                Publish Listing
+                                            <button
+                                                onClick={handleCreateListing}
+                                                disabled={creating}
+                                                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {creating ? (
+                                                    <>
+                                                        <FaSpinner className="text-sm animate-spin" />
+                                                        Creating Listing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaRocket className="text-sm" />
+                                                        Publish Listing
+                                                    </>
+                                                )}
                                             </button>
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Listing Creation Error */}
+                                {createError && (
+                                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                        <p className="text-red-800 text-sm">{createError}</p>
+                                    </div>
+                                )}
                             </motion.div>
                         </AnimatePresence>
                     </div>

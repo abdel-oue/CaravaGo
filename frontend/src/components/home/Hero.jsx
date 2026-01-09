@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FaMapMarkerAlt } from 'react-icons/fa';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { useLocationAutocomplete } from '../../hooks/useLocations';
@@ -17,7 +16,6 @@ const Hero = () => {
         loading: locationLoading,
         selectedLocation,
         selectLocation,
-        clearSelection,
         showDropdown,
         handleInputFocus,
         handleInputBlur
@@ -122,67 +120,81 @@ const Hero = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.6 }}
                 >
-                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4">
-                        <label className="block text-sm font-bold text-gray-800 mb-1">Where?</label>
-                        <input
-                            type="text"
-                            placeholder="Pick-up location"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            onFocus={handleInputFocus}
-                            onBlur={handleInputBlur}
-                            className="w-full outline-none text-gray-600 placeholder-gray-400"
-                        />
+                    <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4 relative">
+                        <label htmlFor="location-input" className="block text-sm font-bold text-gray-800 mb-1">Where?</label>
+                        <div className="relative">
+                            <input
+                                id="location-input"
+                                type="text"
+                                placeholder="Pick-up location"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onFocus={handleInputFocus}
+                                onBlur={handleInputBlur}
+                                className="w-full outline-none text-gray-600 placeholder-gray-400"
+                            />
+                            {locationLoading && (
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-primary"></div>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Location Suggestions Dropdown */}
-                        {showDropdown && (
-                            <div className="absolute top-full left-0 w-[400px] bg-white rounded-lg shadow-xl border border-gray-100 z-50 mt-2 p-4 flex gap-4 max-h-[400px] overflow-y-auto">
-                                {/* Popular/Suggested Searches */}
-                                <div className="flex-1">
-                                    <h3 className="text-sm font-bold text-gray-900 mb-3">
-                                        {query.length < 2 ? "Popular searches" : "Suggestions"}
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {suggestions.length > 0 ? (
-                                            suggestions.map((loc, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="flex items-start gap-3 cursor-pointer group hover:bg-gray-50 p-2 rounded-md transition-colors"
-                                                    onMouseDown={() => selectLocation(loc)}
-                                                >
-                                                    <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-gray-200 transition-colors">
-                                                        <MapPin className="w-5 h-5 text-gray-400" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-semibold text-gray-800 text-sm">{loc.city}</p>
-                                                        <p className="text-xs text-gray-500">{loc.country}</p>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-gray-500 text-sm">No locations found</p>
-                                        )}
+                        {showDropdown && suggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[60] max-h-60 overflow-y-auto mt-1">
+                                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                        {query ? 'Search Results' : 'Popular Locations'}
                                     </div>
                                 </div>
-
-                                {/* Nearby Column - Always visible */}
-                                <div className="flex-1 border-l border-gray-100 pl-4">
-                                    <h3 className="text-sm font-bold text-gray-900 mb-3">Nearby</h3>
-                                    <div
-                                        className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
-                                        onMouseDown={handleCurrentLocation}
+                                {suggestions.map((location) => (
+                                    <button
+                                        key={`${location.city}-${location.country}`}
+                                        type="button"
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                        onClick={() => selectLocation(location)}
                                     >
-                                        <div className="bg-gray-100 p-2 rounded-lg">
-                                            {isLocating ? (
-                                                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                            ) : (
-                                                <Navigation className="w-5 h-5 text-primary rotate-45" fill="currentColor" />
-                                            )}
+                                        <div className="flex items-center space-x-2">
+                                            <MapPin className="text-gray-400 text-sm" />
+                                            <div>
+                                                <div className="font-medium text-gray-900">
+                                                    {location.city}
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    {location.region && `${location.region}, `}{location.country}
+                                                </div>
+                                            </div>
                                         </div>
+                                    </button>
+                                ))}
+                                
+                                {/* Nearby Option */}
+                                <button 
+                                    type="button"
+                                    className="w-full text-left px-4 py-3 hover:bg-gray-50 cursor-pointer border-t border-gray-200"
+                                    onClick={handleCurrentLocation}
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        {isLocating ? (
+                                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            <Navigation className="text-primary rotate-45" size={16} fill="currentColor" />
+                                        )}
                                         <span className="text-primary font-medium text-sm">
                                             {isLocating ? "Locating..." : "Search around me"}
                                         </span>
                                     </div>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Selected Location Display */}
+                        {selectedLocation && (
+                            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                <div className="flex items-center text-green-800 text-sm">
+                                    <MapPin className="mr-2" size={14} />
+                                    Selected: {selectedLocation.city}, {selectedLocation.country}
                                 </div>
                             </div>
                         )}
@@ -190,7 +202,7 @@ const Hero = () => {
 
                     {/* Date Input */}
                     <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 p-4">
-                        <label className="block text-sm font-bold text-gray-800 mb-1">Your travel dates</label>
+                        <label id="date-picker-label" className="block text-sm font-bold text-gray-800 mb-1">Your travel dates</label>
                         <div className="flex gap-2">
                             <DatePicker
                                 selected={startDate}
@@ -204,6 +216,7 @@ const Hero = () => {
                                 endDate={endDate}
                                 placeholderText="Departure - Return"
                                 className="w-full outline-none text-gray-600 placeholder-gray-400"
+                                aria-labelledby="date-picker-label"
                             />
                         </div>
                     </div>

@@ -6,8 +6,8 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
-import userRoutes from './routes/user.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import locationsRoutes from './routes/location.routes.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,9 +50,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/locations', locationsRoutes)
 
 const PORT = process.env.PORT || 4000;
 
