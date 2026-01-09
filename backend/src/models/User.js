@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { dbLogger } from '../utils/logger.js';
 import { sendPasswordResetEmail, sendPasswordResetSuccessEmail } from '../utils/email.js';
 
 // User Schema

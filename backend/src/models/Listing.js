@@ -1,5 +1,210 @@
-import { supabase } from '../config/db.js';
+import mongoose from 'mongoose';
 import { dbLogger } from '../utils/logger.js';
+
+// Vehicle Type Schema
+const vehicleTypeSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    default: null
+  },
+  icon_url: {
+    type: String,
+    default: null
+  }
+}, {
+  timestamps: { createdAt: 'created_at', updatedAt: false }
+});
+
+// Amenity Schema
+const amenitySchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  icon_url: {
+    type: String,
+    default: null
+  },
+  category: {
+    type: String,
+    enum: ['kitchen', 'bathroom', 'comfort', 'technology', 'entertainment', 'exterior', 'safety', 'other'],
+    default: 'other'
+  }
+}, {
+  timestamps: { createdAt: 'created_at', updatedAt: false }
+});
+
+// Listing Photo Schema (embedded in Listing)
+const listingPhotoSchema = new mongoose.Schema({
+  photo_url: {
+    type: String,
+    required: true
+  },
+  alt_text: {
+    type: String,
+    default: null
+  },
+  is_primary: {
+    type: Boolean,
+    default: false
+  },
+  sort_order: {
+    type: Number,
+    default: 0
+  }
+}, {
+  timestamps: { createdAt: 'created_at', updatedAt: false },
+  _id: true
+});
+
+// Listing Schema
+const listingSchema = new mongoose.Schema({
+  owner_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 255
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  vehicle_type_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'VehicleType',
+    default: null
+  },
+  make: {
+    type: String,
+    default: null,
+    maxlength: 100
+  },
+  model: {
+    type: String,
+    default: null,
+    maxlength: 100
+  },
+  year: {
+    type: Number,
+    required: true,
+    min: 1900,
+    max: new Date().getFullYear() + 1
+  },
+  sleeps: {
+    type: Number,
+    default: null,
+    min: 1
+  },
+  length_meters: {
+    type: Number,
+    default: null,
+    min: 0,
+    max: 99.99
+  },
+  location_city: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 100
+  },
+  location_country: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 100
+  },
+  latitude: {
+    type: Number,
+    default: null,
+    min: -90,
+    max: 90
+  },
+  longitude: {
+    type: Number,
+    default: null,
+    min: -180,
+    max: 180
+  },
+  daily_rate: {
+    type: Number,
+    required: true,
+    min: 0.01
+  },
+  currency: {
+    type: String,
+    default: 'EUR',
+    maxlength: 3
+  },
+  min_rental_days: {
+    type: Number,
+    default: 1,
+    min: 1
+  },
+  max_rental_days: {
+    type: Number,
+    default: 90,
+    min: 1
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'pending', 'active', 'inactive', 'suspended'],
+    default: 'pending'
+  },
+  is_featured: {
+    type: Boolean,
+    default: false
+  },
+  amenity_ids: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Amenity'
+  }],
+  photos: [listingPhotoSchema]
+}, {
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+});
+
+// Indexes for performance
+listingSchema.index({ owner_id: 1 });
+listingSchema.index({ status: 1 });
+listingSchema.index({ vehicle_type_id: 1 });
+listingSchema.index({ location_city: 1, location_country: 1 });
+listingSchema.index({ daily_rate: 1 });
+listingSchema.index({ created_at: -1 });
+listingSchema.index({ latitude: 1, longitude: 1 });
+
+// Virtual for id to return _id as id for frontend compatibility
+listingSchema.virtual('id').get(function() {
+  return this._id.toHexString();
+});
+
+// Ensure virtual fields are serialized
+listingSchema.set('toJSON', {
+  virtuals: true,
+  transform: function(doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  }
+});
+
+// Create models
+const VehicleType = mongoose.model('VehicleType', vehicleTypeSchema);
+const Amenity = mongoose.model('Amenity', amenitySchema);
+const Listing = mongoose.model('Listing', listingSchema);
 
 class ListingService {
   // Create a new listing
@@ -31,125 +236,78 @@ class ListingService {
 
       dbLogger.info('Creating new listing', { owner_id, title });
 
-      // Insert listing into Supabase
-      const { data, error } = await supabase
-        .from('listings')
-        .insert([
-          {
-            owner_id,
-            title,
-            description,
-            vehicle_type_id,
-            make,
-            model,
-            year,
-            sleeps,
-            length_meters,
-            location_city,
-            location_country,
-            latitude,
-            longitude,
-            daily_rate,
-            currency,
-            min_rental_days,
-            max_rental_days,
-            status,
-            is_featured
-          }
-        ])
-        .select()
-        .single();
+      // Convert owner_id to ObjectId if it's a string
+      const ownerObjectId = typeof owner_id === 'string' 
+        ? new mongoose.Types.ObjectId(owner_id) 
+        : owner_id;
 
-      if (error) {
-        dbLogger.error('Failed to create listing', { owner_id, title }, error);
-        throw error;
-      }
+      // Convert vehicle_type_id to ObjectId if provided and is a string
+      const vehicleTypeObjectId = vehicle_type_id && typeof vehicle_type_id === 'string'
+        ? new mongoose.Types.ObjectId(vehicle_type_id)
+        : vehicle_type_id;
 
-      const listingId = data.id;
+      // Convert amenity_ids to ObjectIds if they're strings
+      const amenityObjectIds = Array.isArray(amenity_ids)
+        ? amenity_ids.map(id => typeof id === 'string' ? new mongoose.Types.ObjectId(id) : id)
+        : [];
 
-      // Add amenities if provided
-      if (amenity_ids && amenity_ids.length > 0) {
-        await this.addAmenitiesToListing(listingId, amenity_ids);
-      }
-
-      // Add photos if provided
-      if (photos && photos.length > 0) {
-        await this.addPhotosToListing(listingId, photos);
-      }
-
-      // Fetch the complete listing with relations
-      const completeListing = await this.getListingById(listingId);
-
-      dbLogger.success('Listing created successfully', {
-        listing_id: listingId,
-        owner_id: data.owner_id,
-        title: data.title
-      });
-
-      return completeListing;
-    } catch (error) {
-      dbLogger.error('Listing creation failed', { owner_id: listingData?.owner_id }, error);
-      throw error;
-    }
-  }
-
-  // Add amenities to a listing
-  static async addAmenitiesToListing(listingId, amenityIds) {
-    try {
-      if (!amenityIds || amenityIds.length === 0) return;
-
-      const amenityRecords = amenityIds.map(amenityId => ({
-        listing_id: listingId,
-        amenity_id: amenityId
-      }));
-
-      const { error } = await supabase
-        .from('listing_amenities')
-        .insert(amenityRecords);
-
-      if (error) {
-        dbLogger.error('Failed to add amenities to listing', { listing_id: listingId }, error);
-        throw error;
-      }
-
-      dbLogger.success('Amenities added to listing', {
-        listing_id: listingId,
-        count: amenityIds.length
-      });
-    } catch (error) {
-      dbLogger.error('Failed to add amenities', { listing_id: listingId }, error);
-      throw error;
-    }
-  }
-
-  // Add photos to a listing
-  static async addPhotosToListing(listingId, photos) {
-    try {
-      if (!photos || photos.length === 0) return;
-
-      const photoRecords = photos.map((photo, index) => ({
-        listing_id: listingId,
+      // Prepare photos array
+      const photosArray = photos.map((photo, index) => ({
         photo_url: photo.url || photo,
         alt_text: photo.alt_text || photo.alt || `Listing photo ${index + 1}`,
         is_primary: photo.is_primary || index === 0,
         sort_order: photo.sort_order || index
       }));
 
-      const { error } = await supabase
-        .from('listing_photos')
-        .insert(photoRecords);
-
-      if (error) {
-        dbLogger.error('Failed to add photos to listing', { listing_id: listingId }, error);
-        throw error;
-      }
-
-      dbLogger.success('Photos added to listing', {
-        listing_id: listingId,
-        count: photos.length
+      // Create listing
+      const listing = new Listing({
+        owner_id: ownerObjectId,
+        title,
+        description,
+        vehicle_type_id,
+        make,
+        model,
+        year,
+        sleeps,
+        length_meters,
+        location_city,
+        location_country,
+        latitude,
+        longitude,
+        daily_rate,
+        currency,
+        min_rental_days,
+        max_rental_days,
+        status,
+        is_featured,
+        amenity_ids: amenityObjectIds,
+        photos: photosArray
       });
+
+      const savedListing = await listing.save();
+
+      // Populate relations for response
+      const completeListing = await Listing.findById(savedListing._id)
+        .populate('owner_id', 'name email avatar_url')
+        .populate('vehicle_type_id', 'name description icon_url')
+        .populate('amenity_ids', 'name category icon_url')
+        .lean();
+
+      dbLogger.success('Listing created successfully', {
+        listing_id: savedListing._id.toString(),
+        owner_id: owner_id.toString(),
+        title: savedListing.title
+      });
+
+      // Convert to JSON format with id
+      return {
+        ...completeListing,
+        id: completeListing._id.toString(),
+        owner_id: completeListing.owner_id?._id?.toString() || completeListing.owner_id,
+        vehicle_type_id: completeListing.vehicle_type_id?._id?.toString() || completeListing.vehicle_type_id
+      };
     } catch (error) {
-      dbLogger.error('Failed to add photos', { listing_id: listingId }, error);
+      dbLogger.error('Listing creation failed', { owner_id: listingData?.owner_id }, error);
       throw error;
     }
   }
@@ -161,49 +319,52 @@ class ListingService {
 
       dbLogger.info('Fetching listings', { filters });
 
-      let query = supabase
-        .from('listings')
-        .select(`
-          *,
-          vehicle_types:vehicle_type_id(name),
-          listing_amenities(amenity_id, amenities:amenity_id(name, category, icon_url)),
-          listing_photos(photo_url, alt_text, is_primary, sort_order)
-        `)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+      let query = Listing.find();
 
+      // Apply filters
       if (status) {
-        query = query.eq('status', status);
+        query = query.where('status').equals(status);
       } else {
         // Default to active listings for public access
-        query = query.eq('status', 'active');
+        query = query.where('status').equals('active');
       }
 
       if (vehicle_type_id) {
-        query = query.eq('vehicle_type_id', vehicle_type_id);
+        query = query.where('vehicle_type_id').equals(vehicle_type_id);
       }
 
       if (location_city) {
-        query = query.ilike('location_city', `%${location_city}%`);
+        query = query.where('location_city').regex(new RegExp(location_city, 'i'));
       }
 
       if (location_country) {
-        query = query.ilike('location_country', `%${location_country}%`);
+        query = query.where('location_country').regex(new RegExp(location_country, 'i'));
       }
 
-      const { data, error } = await query;
+      // Populate relations
+      query = query
+        .populate('owner_id', 'name email avatar_url')
+        .populate('vehicle_type_id', 'name description icon_url')
+        .populate('amenity_ids', 'name category icon_url')
+        .sort({ created_at: -1 })
+        .limit(parseInt(limit))
+        .skip(parseInt(offset))
+        .lean();
 
-      if (error) {
-        dbLogger.error('Failed to fetch listings', { filters }, error);
-        throw error;
-      }
+      const data = await query;
 
       dbLogger.success('Listings fetched successfully', {
         count: data?.length || 0,
         filters
       });
 
-      return data || [];
+      // Transform to include id field
+      return data.map(listing => ({
+        ...listing,
+        id: listing._id.toString(),
+        owner_id: listing.owner_id?._id?.toString() || listing.owner_id,
+        vehicle_type_id: listing.vehicle_type_id?._id?.toString() || listing.vehicle_type_id
+      }));
     } catch (error) {
       dbLogger.error('Failed to fetch listings', { filters }, error);
       throw error;
@@ -215,33 +376,29 @@ class ListingService {
     try {
       dbLogger.info('Fetching listing by ID', { listing_id: id });
 
-      const { data, error } = await supabase
-        .from('listings')
-        .select(`
-          *,
-          vehicle_types:vehicle_type_id(name, description, icon_url),
-          listing_amenities(amenity_id, amenities:amenity_id(id, name, category, icon_url)),
-          listing_photos(id, photo_url, alt_text, is_primary, sort_order)
-        `)
-        .eq('id', id)
-        .single();
+      const listing = await Listing.findById(id)
+        .populate('owner_id', 'name email avatar_url')
+        .populate('vehicle_type_id', 'name description icon_url')
+        .populate('amenity_ids', 'id name category icon_url')
+        .lean();
 
-      if (error && error.code !== 'PGRST116') {
-        dbLogger.error('Failed to fetch listing', { listing_id: id }, error);
-        throw error;
-      }
-
-      if (!data) {
+      if (!listing) {
         dbLogger.warning('Listing not found', { listing_id: id });
         return null;
       }
 
       dbLogger.success('Listing fetched successfully', {
-        listing_id: data.id,
-        title: data.title
+        listing_id: listing._id.toString(),
+        title: listing.title
       });
 
-      return data;
+      // Transform to include id field
+      return {
+        ...listing,
+        id: listing._id.toString(),
+        owner_id: listing.owner_id?._id?.toString() || listing.owner_id,
+        vehicle_type_id: listing.vehicle_type_id?._id?.toString() || listing.vehicle_type_id
+      };
     } catch (error) {
       dbLogger.error('Failed to fetch listing', { listing_id: id }, error);
       throw error;
@@ -253,28 +410,30 @@ class ListingService {
     try {
       dbLogger.info('Fetching listings by owner ID', { owner_id: ownerId });
 
-      const { data, error } = await supabase
-        .from('listings')
-        .select(`
-          *,
-          vehicle_types:vehicle_type_id(name),
-          listing_amenities(amenity_id, amenities:amenity_id(name, category, icon_url)),
-          listing_photos(photo_url, alt_text, is_primary, sort_order)
-        `)
-        .eq('owner_id', ownerId)
-        .order('created_at', { ascending: false });
+      // Convert ownerId to ObjectId if it's a string
+      const ownerObjectId = typeof ownerId === 'string' 
+        ? new mongoose.Types.ObjectId(ownerId) 
+        : ownerId;
 
-      if (error) {
-        dbLogger.error('Failed to fetch owner listings', { owner_id: ownerId }, error);
-        throw error;
-      }
+      const listings = await Listing.find({ owner_id: ownerObjectId })
+        .populate('owner_id', 'name email avatar_url')
+        .populate('vehicle_type_id', 'name description icon_url')
+        .populate('amenity_ids', 'name category icon_url')
+        .sort({ created_at: -1 })
+        .lean();
 
       dbLogger.success('Owner listings fetched successfully', {
         owner_id: ownerId,
-        count: data?.length || 0
+        count: listings?.length || 0
       });
 
-      return data || [];
+      // Transform to include id field
+      return listings.map(listing => ({
+        ...listing,
+        id: listing._id.toString(),
+        owner_id: listing.owner_id?._id?.toString() || listing.owner_id,
+        vehicle_type_id: listing.vehicle_type_id?._id?.toString() || listing.vehicle_type_id
+      }));
     } catch (error) {
       dbLogger.error('Failed to fetch owner listings', { owner_id: ownerId }, error);
       throw error;
@@ -286,82 +445,89 @@ class ListingService {
     try {
       dbLogger.info('Updating listing', { listing_id: id, owner_id: ownerId });
 
+      // Convert ownerId to ObjectId if it's a string
+      const ownerObjectId = typeof ownerId === 'string' 
+        ? new mongoose.Types.ObjectId(ownerId) 
+        : ownerId;
+
       // First verify the listing belongs to the owner
-      const existingListing = await this.getListingById(id);
+      const existingListing = await Listing.findById(id);
       if (!existingListing) {
         throw new Error('Listing not found');
       }
 
-      if (existingListing.owner_id !== ownerId) {
+      if (existingListing.owner_id.toString() !== ownerObjectId.toString()) {
         dbLogger.warning('Unauthorized listing update attempt', {
           listing_id: id,
-          owner_id: existingListing.owner_id,
+          owner_id: existingListing.owner_id.toString(),
           requester_id: ownerId
         });
         throw new Error('Not authorized to update this listing');
       }
 
       // Separate amenities and photos from other update data
-      const { amenity_ids, photos, ...listingUpdateData } = updateData;
+      const { amenity_ids, photos, vehicle_type_id, ...listingUpdateData } = updateData;
 
       // Prepare update data (remove undefined values)
       const updatePayload = Object.fromEntries(
         Object.entries(listingUpdateData).filter(([_, v]) => v !== undefined)
       );
 
-      // Update listing if there's data to update
-      if (Object.keys(updatePayload).length > 0) {
-        const { data, error } = await supabase
-          .from('listings')
-          .update(updatePayload)
-          .eq('id', id)
-          .eq('owner_id', ownerId)
-          .select()
-          .single();
-
-        if (error) {
-          dbLogger.error('Failed to update listing', { listing_id: id, owner_id: ownerId }, error);
-          throw error;
-        }
+      // Convert vehicle_type_id to ObjectId if provided
+      if (vehicle_type_id !== undefined) {
+        updatePayload.vehicle_type_id = vehicle_type_id && typeof vehicle_type_id === 'string'
+          ? new mongoose.Types.ObjectId(vehicle_type_id)
+          : vehicle_type_id;
       }
 
-      // Update amenities if provided
-      if (amenity_ids !== undefined) {
-        // Delete existing amenities
-        await supabase
-          .from('listing_amenities')
-          .delete()
-          .eq('listing_id', id);
-
-        // Add new amenities
-        if (Array.isArray(amenity_ids) && amenity_ids.length > 0) {
-          await this.addAmenitiesToListing(id, amenity_ids);
-        }
-      }
-
-      // Update photos if provided
+      // Handle photos if provided
       if (photos !== undefined) {
-        // Delete existing photos
-        await supabase
-          .from('listing_photos')
-          .delete()
-          .eq('listing_id', id);
-
-        // Add new photos
         if (Array.isArray(photos) && photos.length > 0) {
-          await this.addPhotosToListing(id, photos);
+          updatePayload.photos = photos.map((photo, index) => ({
+            photo_url: photo.url || photo,
+            alt_text: photo.alt_text || photo.alt || `Listing photo ${index + 1}`,
+            is_primary: photo.is_primary || index === 0,
+            sort_order: photo.sort_order || index
+          }));
+        } else {
+          updatePayload.photos = [];
         }
       }
 
-      // Fetch the updated listing with relations
-      const updatedListing = await this.getListingById(id);
+      // Handle amenity_ids if provided
+      if (amenity_ids !== undefined) {
+        updatePayload.amenity_ids = Array.isArray(amenity_ids)
+          ? amenity_ids.map(id => typeof id === 'string' ? new mongoose.Types.ObjectId(id) : id)
+          : [];
+      }
+
+      // Update listing
+      const updatedListing = await Listing.findByIdAndUpdate(
+        id,
+        { $set: updatePayload },
+        { new: true, runValidators: true }
+      )
+        .populate('owner_id', 'name email avatar_url')
+        .populate('vehicle_type_id', 'name description icon_url')
+        .populate('amenity_ids', 'name category icon_url')
+        .lean();
+
+      if (!updatedListing) {
+        throw new Error('Listing not found');
+      }
 
       dbLogger.success('Listing updated successfully', {
-        listing_id: updatedListing.id,
+        listing_id: updatedListing._id.toString(),
         title: updatedListing.title
       });
 
-      return updatedListing;
+      // Transform to include id field
+      return {
+        ...updatedListing,
+        id: updatedListing._id.toString(),
+        owner_id: updatedListing.owner_id?._id?.toString() || updatedListing.owner_id,
+        vehicle_type_id: updatedListing.vehicle_type_id?._id?.toString() || updatedListing.vehicle_type_id
+      };
     } catch (error) {
       dbLogger.error('Listing update failed', { listing_id: id, owner_id: ownerId }, error);
       throw error;
@@ -373,33 +539,28 @@ class ListingService {
     try {
       dbLogger.info('Deleting listing', { listing_id: id, owner_id: ownerId });
 
+      // Convert ownerId to ObjectId if it's a string
+      const ownerObjectId = typeof ownerId === 'string' 
+        ? new mongoose.Types.ObjectId(ownerId) 
+        : ownerId;
+
       // First verify the listing belongs to the owner
-      const existingListing = await this.getListingById(id);
+      const existingListing = await Listing.findById(id);
       if (!existingListing) {
         throw new Error('Listing not found');
       }
 
-      if (existingListing.owner_id !== ownerId) {
+      if (existingListing.owner_id.toString() !== ownerObjectId.toString()) {
         dbLogger.warning('Unauthorized listing deletion attempt', {
           listing_id: id,
-          owner_id: existingListing.owner_id,
+          owner_id: existingListing.owner_id.toString(),
           requester_id: ownerId
         });
         throw new Error('Not authorized to delete this listing');
       }
 
-      // Note: Due to CASCADE constraints, related records in listing_amenities and listing_photos
-      // will be automatically deleted
-      const { error } = await supabase
-        .from('listings')
-        .delete()
-        .eq('id', id)
-        .eq('owner_id', ownerId);
-
-      if (error) {
-        dbLogger.error('Failed to delete listing', { listing_id: id, owner_id: ownerId }, error);
-        throw error;
-      }
+      // Delete listing (photos and amenities are embedded/referenced, so they'll be handled automatically)
+      await Listing.findByIdAndDelete(id);
 
       dbLogger.success('Listing deleted successfully', {
         listing_id: id,
@@ -418,21 +579,18 @@ class ListingService {
     try {
       dbLogger.info('Fetching vehicle types');
 
-      const { data, error } = await supabase
-        .from('vehicle_types')
-        .select('*')
-        .order('name');
-
-      if (error) {
-        dbLogger.error('Failed to fetch vehicle types', null, error);
-        throw error;
-      }
+      const data = await VehicleType.find()
+        .sort({ name: 1 })
+        .lean();
 
       dbLogger.success('Vehicle types fetched successfully', {
         count: data?.length || 0
       });
 
-      return data || [];
+      return data.map(vt => ({
+        ...vt,
+        id: vt._id.toString()
+      }));
     } catch (error) {
       dbLogger.error('Failed to fetch vehicle types', null, error);
       throw error;
@@ -444,22 +602,18 @@ class ListingService {
     try {
       dbLogger.info('Fetching amenities');
 
-      const { data, error } = await supabase
-        .from('amenities')
-        .select('*')
-        .order('category', { ascending: true })
-        .order('name', { ascending: true });
-
-      if (error) {
-        dbLogger.error('Failed to fetch amenities', null, error);
-        throw error;
-      }
+      const data = await Amenity.find()
+        .sort({ category: 1, name: 1 })
+        .lean();
 
       dbLogger.success('Amenities fetched successfully', {
         count: data?.length || 0
       });
 
-      return data || [];
+      return data.map(amenity => ({
+        ...amenity,
+        id: amenity._id.toString()
+      }));
     } catch (error) {
       dbLogger.error('Failed to fetch amenities', null, error);
       throw error;
@@ -468,3 +622,4 @@ class ListingService {
 }
 
 export default ListingService;
+export { Listing, VehicleType, Amenity };
