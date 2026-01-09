@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { FaMapMarkerAlt } from 'react-icons/fa';
+import { useVehicleTypes } from '../../hooks/useVehicleTypes';
 
 const Step1BasicInfo = ({
     formData,
@@ -15,6 +16,7 @@ const Step1BasicInfo = ({
     handleInputFocus,
     handleInputBlur
 }) => {
+    const { vehicleTypes, loading: vehicleTypesLoading } = useVehicleTypes();
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -46,16 +48,21 @@ const Step1BasicInfo = ({
                     <select
                         value={formData.vehicleType}
                         onChange={(e) => updateFormData('vehicleType', e.target.value)}
-                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                        disabled={vehicleTypesLoading}
+                        className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
                             errors.vehicleType ? 'border-red-500' : 'border-gray-300'
                         }`}
                     >
-                        <option value="">Select vehicle type</option>
-                        <option value="campervan">Campervan</option>
-                        <option value="large-campervan">Large Campervan</option>
-                        <option value="motorhome">Motorhome</option>
-                        <option value="low-profile">Low Profile Motorhome</option>
-                        <option value="coachbuilt">Coachbuilt Motorhome</option>
+                        <option value="">
+                            {vehicleTypesLoading ? 'Loading vehicle types...' : 'Select vehicle type'}
+                        </option>
+                        {[...vehicleTypes]
+                            .sort((a, b) => a.id - b.id)
+                            .map((type)=> (
+                            <option key={type.id} value={type.id}>
+                                {type.name}
+                            </option>
+                        ))}
                     </select>
                     {errors.vehicleType && <p className="text-red-500 text-sm mt-1">{errors.vehicleType}</p>}
                 </div>

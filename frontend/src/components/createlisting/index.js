@@ -2,7 +2,6 @@ export { default as HeroSection } from './HeroSection';
 export { default as StepNavigation } from './StepNavigation';
 export { default as ListingSummary } from './ListingSummary';
 export { default as StepContent } from './StepContent';
-export { default as VerticalStepNavigation } from './VerticalStepNavigation';
 export { default as Step1BasicInfo } from './Step1BasicInfo';
 export { default as Step2Details } from './Step2Details';
 export { default as Step3Pricing } from './Step3Pricing';

@@ -296,7 +296,7 @@ class UserService {
   // Update user profile
   static async updateProfile(userId, profileData) {
     try {
-      const { firstName, lastName, phone, address, bio } = profileData;
+      const { firstName, lastName, phone, address, bio, avatar_url } = profileData;
 
       // Build update object with only provided fields
       const updateData = {};
@@ -305,6 +305,7 @@ class UserService {
       if (phone !== undefined) updateData.phone = phone;
       if (address !== undefined) updateData.address = address;
       if (bio !== undefined) updateData.bio = bio;
+      if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
 
       // If firstName or lastName is being updated, also update the main name field
       if (firstName !== undefined || lastName !== undefined) {
@@ -404,80 +405,6 @@ class UserService {
       await sendPasswordResetSuccessEmail(user.email);
 
       return user;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get user bookings (as renter)
-  static async getUserBookings(userId) {
-    try {
-      // Since we're using MongoDB but the schema shows SQL,
-      // I'll implement basic MongoDB queries for now
-      // In a real implementation, you'd have separate models for Bookings, etc.
-
-      // For now, return empty array - this would be implemented with proper models
-      return [];
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get user listings (as owner)
-  static async getUserListings(userId) {
-    try {
-      // Return empty array - this would be implemented with proper Listing model
-      return [];
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get user reviews (received reviews)
-  static async getUserReviews(userId) {
-    try {
-      // Return empty array - this would be implemented with proper Review model
-      return [];
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get user favorites
-  static async getUserFavorites(userId) {
-    try {
-      // Return empty array - this would be implemented with proper Favorite model
-      return [];
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get user messages
-  static async getUserMessages(userId) {
-    try {
-      // Return empty array - this would be implemented with proper Message model
-      return [];
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Get user notifications
-  static async getUserNotifications(userId) {
-    try {
-      // Return empty array - this would be implemented with proper Notification model
-      return [];
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Mark notification as read
-  static async markNotificationAsRead(userId, notificationId) {
-    try {
-      // Return false - this would be implemented with proper Notification model
-      return false;
     } catch (error) {
       throw error;
     }
