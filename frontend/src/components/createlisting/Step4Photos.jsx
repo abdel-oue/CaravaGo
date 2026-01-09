@@ -5,44 +5,71 @@ import { uploadImages, deleteUploadedFile, getImageUrl } from '../../api/upload.
 
 const Step4Photos = ({ formData, errors, updateFormData }) => {
     const [uploading, setUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState({});
     const [uploadErrors, setUploadErrors] = useState({});
     const [draggedIndex, setDraggedIndex] = useState(null);
 
     const handleFileSelect = async (files) => {
         if (!files || files.length === 0) return;
-
         setUploading(true);
         setUploadErrors({});
 
         try {
-            // Upload all files to backend
+            // First, add the files to local state for immediate display
+            const fileObjects = files.map(file => ({
+                id: Date.now() + Math.random(),
+                file: file,
+                originalName: file.name,
+                size: file.size,
+                mimetype: file.type,
+                uploaded: false,
+                uploading: true
+            }));
+
+            const tempPhotos = [...formData.photos, ...fileObjects];
+            updateFormData('photos', tempPhotos);
+
+            // Then upload to backend
             const uploadedImages = await uploadImages(files, 'listing');
 
-            // Add uploaded images to form data
-            const newPhotos = [
-                ...formData.photos,
-                ...uploadedImages.images.map(img => ({
-                    id: Date.now() + Math.random(), // Unique ID for frontend management
-                    path: img.path,
-                    filename: img.filename,
-                    originalName: img.originalName,
-                    size: img.size,
-                    mimetype: img.mimetype,
-                    uploaded: true
-                }))
-            ];
+            // Update the uploaded photos with server data
+            const updatedPhotos = tempPhotos.map(photo => {
+                if (photo.uploading) {
+                    const uploaded = uploadedImages.images.find(
+                        img => img.originalName === photo.originalName
+                    );
+            
+                    if (uploaded) {
+                        return {
+                            id: photo.id,
+                            path: uploaded.path,
+                            filename: uploaded.filename,
+                            originalName: uploaded.originalName,
+                            size: uploaded.size,
+                            mimetype: uploaded.mimetype,
+                            uploaded: true,
+                            uploading: false
+                        };
+                    }
+                }
+                return photo;
+            });            
 
-            updateFormData('photos', newPhotos);
+            updateFormData('photos', updatedPhotos);
         } catch (error) {
             console.error('Upload failed:', error);
             setUploadErrors({ general: error.message || 'Failed to upload photos. Please try again.' });
+
+            // Remove failed uploads from the list
+            const filteredPhotos = formData.photos.filter(photo => !photo.uploading);
+            updateFormData('photos', filteredPhotos);
         } finally {
             setUploading(false);
         }
     };
 
     const handleFileInputChange = (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // IMPORTANT
         const files = Array.from(e.target.files);
         handleFileSelect(files);
         // Reset input value to allow selecting the same file again
@@ -50,6 +77,8 @@ const Step4Photos = ({ formData, errors, updateFormData }) => {
     };
 
     const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // IMPORTANT
         e.preventDefault();
         const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
         if (files.length > 0) {
@@ -59,9 +88,11 @@ const Step4Photos = ({ formData, errors, updateFormData }) => {
 
     const handleDragOver = (e) => {
         e.preventDefault();
+        e.stopPropagation(); // IMPORTANT
     };
 
     const removePhoto = async (index) => {
+        
         const photo = formData.photos[index];
 
         // If photo was uploaded to backend, delete it from server
@@ -80,18 +111,21 @@ const Step4Photos = ({ formData, errors, updateFormData }) => {
     };
 
     const handlePhotoDragStart = (e, index) => {
+        e.preventDefault();
+        e.stopPropagation(); // IMPORTANT
         setDraggedIndex(index);
         e.dataTransfer.effectAllowed = 'move';
     };
 
     const handlePhotoDragOver = (e, index) => {
         e.preventDefault();
+        e.stopPropagation(); // IMPORTANT
         e.dataTransfer.dropEffect = 'move';
     };
 
     const handlePhotoDrop = (e, dropIndex) => {
         e.preventDefault();
-
+        e.stopPropagation(); // IMPORTANT
         if (draggedIndex === null || draggedIndex === dropIndex) {
             setDraggedIndex(null);
             return;
@@ -173,7 +207,7 @@ const Step4Photos = ({ formData, errors, updateFormData }) => {
             {formData.photos.length > 0 && (
                 <div>
                     <h4 className="font-medium text-gray-900 mb-3">
-                        Uploaded Photos ({formData.photos.length})
+                        Photos ({formData.photos.filter(p => p.uploaded).length}/{formData.photos.length})
                         {uploading && <span className="text-blue-500 ml-2">Uploading...</span>}
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -190,21 +224,27 @@ const Step4Photos = ({ formData, errors, updateFormData }) => {
                                 }`}
                             >
                                 <img
-                                    src={photo.uploaded ? getImageUrl(photo.path) : URL.createObjectURL(photo)}
+                                    src={photo.uploaded ? getImageUrl(photo.path) : URL.createObjectURL(photo.file || photo)}
                                     alt={`Photo ${index + 1}`}
                                     className="w-full h-24 object-cover rounded-lg"
                                     onError={(e) => {
-                                        console.error('Failed to load image:', photo.path || photo.name);
-                                        e.target.src = '/placeholder-image.png'; // Fallback image
+                                        console.error('Failed to load image:', photo.path || photo.originalName || photo.name);
+                                        e.target.src = 'https://via.placeholder.com/200x150/cccccc/666666?text=No+Image';
                                     }}
                                 />
-                                {photo.uploaded && (
+                                {photo.uploaded && !photo.uploading && (
                                     <div className="absolute top-1 left-1 bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
                                         <FaCheck className="text-xs" />
                                     </div>
                                 )}
+                                {photo.uploading && (
+                                    <div className="absolute top-1 left-1 bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                                        <FaSpinner className="text-xs animate-spin" />
+                                    </div>
+                                )}
                                 <div className="absolute top-1 right-1 flex gap-1">
                                     <button
+                                        type="button"
                                         onClick={() => removePhoto(index)}
                                         disabled={uploading}
                                         className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50"
@@ -213,7 +253,7 @@ const Step4Photos = ({ formData, errors, updateFormData }) => {
                                     </button>
                                 </div>
                                 <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity truncate">
-                                    {photo.originalName || photo.name}
+                                    {photo.originalName || photo.file?.name || photo.name}
                                 </div>
                                 {/* Drag indicator */}
                                 <div className="absolute inset-0 border-2 border-blue-500 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" />

@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import locationsRoutes from './routes/location.routes.js'
+import listingsRoutes from './routes/listing.routes.js'
+import bookingRoutes from './routes/booking.routes.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,6 +55,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/locations', locationsRoutes)
+app.use('/api/booking', bookingRoutes)
+app.use('/api/listings', listingsRoutes)
 
 const PORT = process.env.PORT || 4000;
 

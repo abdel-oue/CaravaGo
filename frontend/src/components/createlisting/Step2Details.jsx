@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
+import { useAmenities } from '../../hooks/useVehicleTypes'
 
 const Step2Details = ({ formData, errors, updateFormData }) => {
+    const { amenities, loading: amenitiesLoading } = useAmenities();
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -68,27 +70,28 @@ const Step2Details = ({ formData, errors, updateFormData }) => {
 
             <div>
                 <label className="block text-sm font-bold text-gray-800 mb-3">Features & Amenities</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {[
-                        'Air Conditioning', 'Heating', 'Kitchen', 'Bathroom', 'WiFi',
-                        'TV', 'Awning', 'Bike Rack', 'Solar Panels', 'Generator'
-                    ].map((feature) => (
-                        <label key={feature} className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={formData.features.includes(feature)}
-                                onChange={(e) => {
-                                    const newFeatures = e.target.checked
-                                        ? [...formData.features, feature]
-                                        : formData.features.filter(f => f !== feature);
-                                    updateFormData('features', newFeatures);
-                                }}
-                                className="rounded border-gray-300 text-primary focus:ring-primary"
-                            />
-                            <span className="text-sm text-gray-700">{feature}</span>
-                        </label>
-                    ))}
-                </div>
+                {amenitiesLoading ? (
+                    <div className="text-sm text-gray-500">Loading amenities...</div>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {amenities.map((amenity) => (
+                            <label key={amenity.id} className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.amenities.includes(amenity.id)}
+                                    onChange={(e) => {
+                                        const newAmenities = e.target.checked
+                                            ? [...formData.amenities, amenity.id]
+                                            : formData.amenities.filter(a => a !== amenity.id);
+                                        updateFormData('amenities', newAmenities);
+                                    }}
+                                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <span className="text-sm text-gray-700">{amenity.name}</span>
+                            </label>
+                        ))}
+                    </div>
+                )}
             </div>
         </motion.div>
     );

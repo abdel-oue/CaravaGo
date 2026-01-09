@@ -83,9 +83,8 @@ const listingSchema = new mongoose.Schema({
     required: true
   },
   vehicle_type_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'VehicleType',
-    default: null
+    type: Number,
+    required: true
   },
   make: {
     type: String,
@@ -167,10 +166,9 @@ const listingSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  amenity_ids: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Amenity'
-  }],
+  amenity_ids: {
+    type: [Number]
+  },
   photos: [listingPhotoSchema]
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
@@ -202,7 +200,7 @@ listingSchema.set('toJSON', {
 });
 
 // Create models
-const VehicleType = mongoose.model('VehicleType', vehicleTypeSchema);
+const VehicleType = mongoose.model('Vehicle_type', vehicleTypeSchema);
 const Amenity = mongoose.model('Amenity', amenitySchema);
 const Listing = mongoose.model('Listing', listingSchema);
 

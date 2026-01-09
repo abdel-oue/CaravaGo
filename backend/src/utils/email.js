@@ -61,7 +61,6 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
 };
 
 // Send email verification email with 6-digit code and clickable link
-// Send email verification email with 6-digit code and clickable link
 export const sendEmailVerificationEmail = async (email, verificationToken, verificationCode, userName) => {
   try {
     const transporter = createTransporter();

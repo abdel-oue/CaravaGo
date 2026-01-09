@@ -5,6 +5,7 @@ import {
   getLocationsByCountry,
   searchLocations
 } from '../api/locations';
+import { getVehicleTypes } from '../api/listings';
 
 export const useLocations = () => {
   const [locations, setLocations] = useState([]);

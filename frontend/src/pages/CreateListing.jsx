@@ -8,7 +8,8 @@ import { useAuth } from '../context/AuthContext';
 import { useLocationAutocomplete } from '../hooks/useLocations';
 import { Navigate } from 'react-router-dom';
 
-//import { createListing } from '../api/listings.js';
+import { createListing } from '../api/listings.js';
+import Notification from '../components/ui/Notification';
 import {
     HeroSection,
     StepNavigation,
@@ -33,9 +34,9 @@ const CreateListing = () => {
         sleeps: '',
         length: '',
         description: '',
-        features: [],
         dailyRate: '',
-        currency: '€',
+        minRentalPeriod: '1',
+        currency: 'EUR',
         photos: [],
         amenities: []
     });
@@ -44,6 +45,7 @@ const CreateListing = () => {
     const [errors, setErrors] = useState({});
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState('');
+    const [notification, setNotification] = useState({ message: '', type: 'success', isVisible: false });
 
     const steps = [
         { id: 1, title: 'What is it?', description: 'Basic vehicle information', icon: FaCar },
@@ -180,14 +182,24 @@ const CreateListing = () => {
                 longitude: formData.location?.lng || null,
                 daily_rate: parseFloat(formData.dailyRate),
                 currency: formData.currency,
+                min_rental_days: parseInt(formData.minRentalPeriod),
                 photos: uploadedPhotos.map(photo => photo.path), // Send photo paths
                 amenity_ids: formData.amenities.map(a => parseInt(a))
             };
 
-            //const result = await createListing(listingData);
+            const result = await createListing(listingData);
 
-            // Navigate to the newly created listing or listings page
-            navigate(`/listing/${result.id}`); // Assuming the listing has an ID
+            // Show success notification
+            setNotification({
+                message: '🎉 Listing created successfully! Your vehicle is now live.',
+                type: 'success',
+                isVisible: true
+            });
+
+            // Navigate to the newly created listing after 1500ms
+            setTimeout(() => {
+                navigate(`/listing/${result.id}`);
+            }, 1500);
 
         } catch (error) {
             console.error('Failed to create listing:', error);
@@ -308,6 +320,15 @@ const CreateListing = () => {
             </div>
 
             <Footer />
+
+            {/* Success Notification */}
+            <Notification
+                message={notification.message}
+                type={notification.type}
+                isVisible={notification.isVisible}
+                onClose={() => setNotification({ ...notification, isVisible: false })}
+                autoHide={false}
+            />
         </div>
     );
 };

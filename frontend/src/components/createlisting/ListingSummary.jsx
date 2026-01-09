@@ -1,6 +1,22 @@
 import { FaCar } from 'react-icons/fa';
+import { getImageUrl } from '../../api/upload';
 
 const ListingSummary = ({ formData, selectedLocation }) => {
+    // Helper function to get image source for different photo object types
+    const getPhotoSrc = (photo) => {
+        if (photo.uploaded && photo.path) {
+            // Uploaded photo with server path
+            return getImageUrl(photo.path);
+        } else if (photo.file) {
+            // File object during upload process
+            return URL.createObjectURL(photo.file);
+        } else if (photo instanceof File) {
+            // Raw File object
+            return URL.createObjectURL(photo);
+        }
+        // Fallback
+        return 'https://via.placeholder.com/150x150/cccccc/666666?text=No+Image';
+    };
     return (
         <div className="w-80 flex-shrink-0">
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
@@ -32,11 +48,14 @@ const ListingSummary = ({ formData, selectedLocation }) => {
                             <div className="text-sm text-gray-600 mb-2">Photos ({formData.photos.length})</div>
                             <div className="grid grid-cols-3 gap-2">
                                 {formData.photos.slice(0, 3).map((photo, index) => (
-                                    <div key={index} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                                    <div key={photo.id || `photo-${index}`} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
                                         <img
-                                            src={URL.createObjectURL(photo)}
+                                            src={getPhotoSrc(photo)}
                                             alt={`Photo ${index + 1}`}
                                             className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.src = 'https://via.placeholder.com/150x150/cccccc/666666?text=No+Image';
+                                            }}
                                         />
                                     </div>
                                 ))}
