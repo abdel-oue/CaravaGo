@@ -62,7 +62,7 @@ locationSchema.set('toJSON', {
 });
 
 // Create the model
-const Location = mongoose.model('Location', locationSchema);
+const Location = mongoose.model('locations', locationSchema);
 
 class LocationService {
   // Get location by ID

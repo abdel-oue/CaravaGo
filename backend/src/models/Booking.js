@@ -118,8 +118,8 @@ const bookingPromotionSchema = new mongoose.Schema({
 bookingPromotionSchema.index({ booking_id: 1, promotion_id: 1 }, { unique: true });
 
 // Create models
-const Booking = mongoose.model('Booking', bookingSchema);
-const BookingPromotion = mongoose.model('BookingPromotion', bookingPromotionSchema);
+const Booking = mongoose.model('bookings', bookingSchema);
+const BookingPromotion = mongoose.model('bookingpromotions', bookingPromotionSchema);
 
 class BookingService {
   // Create a new booking

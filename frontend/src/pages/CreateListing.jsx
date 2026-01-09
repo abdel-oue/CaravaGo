@@ -184,7 +184,7 @@ const CreateListing = () => {
                 currency: formData.currency,
                 min_rental_days: parseInt(formData.minRentalPeriod),
                 photos: uploadedPhotos.map(photo => photo.path), // Send photo paths
-                amenity_ids: formData.amenities.map(a => parseInt(a))
+                amenity_ids: formData.amenities
             };
 
             const result = await createListing(listingData);

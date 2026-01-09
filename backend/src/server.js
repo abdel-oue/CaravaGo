@@ -4,6 +4,12 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
+// Import models first to ensure they're registered before routes
+import { User } from './models/User.js';
+import { Listing } from './models/Listing.js';
+import { Booking } from './models/Booking.js';
+import { Location } from './models/Location.js';
+
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
