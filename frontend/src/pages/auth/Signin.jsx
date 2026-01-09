@@ -58,7 +58,6 @@ const Signin = () => {
 
     // Wrap the async logic in a separate function to handle errors properly
     (async () => {
-
     try {
       console.log('📡 Making API call to /auth/login');
       const response = await api.post('/auth/login', formData);

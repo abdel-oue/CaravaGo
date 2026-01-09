@@ -3,10 +3,11 @@ import { dbLogger } from '../utils/logger.js';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
-const mongoUrl = process.env.MONGO_URL;
+// Support both MONGO_URI and MONGO_URL for compatibility
+const mongoUrl = process.env.MONGO_URI || process.env.MONGO_URL;
 
 if (!mongoUrl) {
-  const error = new Error('Missing MongoDB environment variable: MONGO_URL');
+  const error = new Error('Missing MongoDB environment variable: MONGO_URI or MONGO_URL');
   dbLogger.error('Database configuration failed', null, error);
   throw error;
 }
